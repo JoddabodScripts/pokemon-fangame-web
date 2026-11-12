@@ -567,7 +567,7 @@
 
   // ---------------- title + new game ----------------
   function drawTitle() {
-    const idx = UI.menu ? UI.menu.idx : G.version === 'flame' ? 1 : 0;
+    const idx = G.pickingVersion && UI.menu ? UI.menu.idx : G.version === 'flame' ? 1 : 0;
     const flame = idx === 1;
     const g = ctx.createLinearGradient(0, 0, 0, SH);
     g.addColorStop(0, flame ? '#4a0e08' : '#06203f');
@@ -616,7 +616,9 @@
 
   async function titleFlow() {
     G.mode = 'title';
+    G.pickingVersion = true;
     const v = await choose(['FREEZE', 'FLAME'], { x: 64, y: 128, w: 128, cols: 2, cancel: false, start: G.version === 'flame' ? 1 : 0 });
+    G.pickingVersion = false;
     G.version = v === 1 ? 'flame' : 'freeze';
     setVersionAssets();
     const save = loadSave(G.version);

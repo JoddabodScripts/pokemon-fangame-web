@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+  <title>Star Region: Freeze and Flame</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <main id="game">
+    <canvas id="screen" width="256" height="192"></canvas>
+    <div id="pad">
+      <div class="dpad">
+        <button data-key="up" class="up">&#9650;</button>
+        <button data-key="left" class="left">&#9664;</button>
+        <button data-key="right" class="right">&#9654;</button>
+        <button data-key="down" class="down">&#9660;</button>
+      </div>
+      <button data-key="start" class="start">MENU</button>
+      <div class="ab">
+        <button data-key="b" class="b">B</button>
+        <button data-key="a" class="a">A</button>
+      </div>
+    </div>
+  </main>
+  <button id="dbgBtn" title="Debug panel (` or F2)">DBG</button>
+  <aside id="debug" hidden></aside>
+
+  <script src="js/data.js"></script>
+  <script src="js/sprites.js"></script>
+  <script src="js/map.js"></script>
+  <script src="js/battle.js"></script>
+  <script src="js/debug.js"></script>
+  <script src="js/main.js"></script>
+</body>
+</html>

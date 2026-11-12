@@ -27,7 +27,7 @@ The game saves to your browser when you heal at a Pokemon Center, when you pick 
 - Battles with type matchups, catching, potions, switching, EXP, level ups, new moves and evolution.
 - Signature moves. Flames of Health (Blazian) and Slime Split (Slimontoon) work the way the notebook describes them. Bog Chomp (Swampest) and Fierce Blast (Fiercebird) are made up for now.
 - Unique Forms, the notebook's featured element. About 1 in 64 wild Pokemon is a Unique Form: different colors, 20% higher stats and a star next to its name.
-- Pokedex with base stats, totals and signature move text.
+- Pokedex with base stats, totals and signature move text. Press A on an entry's stats page to read its lore.
 
 ## Debug panel
 
@@ -47,6 +47,7 @@ Press ` or F2, or click DBG in the corner. You can also add `?debug` to the URL 
 Almost everything lives in `js/data.js`:
 
 - Pokemon names, types, base stats, evolution levels, catch rates and move lists are in the `S(...)` lines.
+- Pokedex lore is the `lore` text on each Pokemon, and `height` is in cm.
 - Moves are in `MOVES`. Signature moves have `sig: true` and a `desc`.
 - Type matchups are in `CHART`.
 

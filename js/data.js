@@ -39,7 +39,7 @@
     gigadrain:   { name: 'Giga Drain',   type: 'Grass', cat: 'spec', power: 70, acc: 100, drain: 0.5 },
     bogchomp:    { name: 'Bog Chomp',    type: 'Grass', cat: 'phys', power: 90, acc: 95, sig: true,
                    effect: { target: 'foe', stat: 'spe', stages: -1, chance: 100 },
-                   desc: 'PLACEHOLDER signature move. 90 power, lowers the target\'s Speed.' },
+                   desc: 'A crushing bite from muddy jaws. 90 power, 95 accuracy. Lowers the target\'s Speed.' },
 
     ember:       { name: 'Ember',        type: 'Fire', cat: 'spec', power: 40, acc: 100 },
     flamewheel:  { name: 'Flame Wheel',  type: 'Fire', cat: 'phys', power: 60, acc: 100 },
@@ -60,7 +60,7 @@
     gust:        { name: 'Gust',         type: 'Flying', cat: 'spec', power: 40, acc: 100 },
     wingattack:  { name: 'Wing Attack',  type: 'Flying', cat: 'phys', power: 60, acc: 100 },
     fierceblast: { name: 'Fierce Blast', type: 'Flying', cat: 'phys', power: 100, acc: 90, sig: true,
-                   desc: 'PLACEHOLDER signature move. 100 power, 90 accuracy.' },
+                   desc: 'A dive so fast the air bursts around it. 100 power, 90 accuracy.' },
 
     icebeam:     { name: 'Ice Beam',     type: 'Ice', cat: 'spec', power: 90, acc: 100 },
     blizzard:    { name: 'Blizzard',     type: 'Ice', cat: 'spec', power: 110, acc: 70 },
@@ -79,7 +79,8 @@
       xp: o.xp || 60,              // base EXP yield
       learn: o.learn || [],        // [level, moveKey]
       sig: o.sig || null,
-      note: o.note || '',
+      lore: o.lore || '',
+      height: o.height || null,    // in cm, only where the notebook gives one
       legendary: !!o.legendary,
       version: o.version || null,
       look: o.look || '',
@@ -87,55 +88,70 @@
     ORDER.push(key);
   }
 
-  const READ = 'Name and stats read from the notebook photo.';
-  const GUESS = 'Name and stats are PLACEHOLDERS. Ask the designer.';
+  // Designer notes (not shown in game). Stats were read from blurry notebook photos:
+  // - Swamporiaer and the three birds were hard to read; bird stats are partly guesses.
+  // - Flamezion adds to 485, page says 475. Slimean adds to 350, page says 370.
+  // - Peeplet and Featherdash names are placeholders. Fiercebird is a best reading.
+  // - Bog Chomp and Fierce Blast are placeholder signature moves.
+  // - Both legendaries are stand-ins until they get designed.
 
   // Grass starter line
   const swampLearn = [[1, 'tackle'], [1, 'growl'], [5, 'vinewhip'], [9, 'leer'], [13, 'razorleaf'], [20, 'gigadrain']];
   S('swampidile', 1, 'Swampidile', ['Grass'], [50, 50, 100, 50, 50, 80],
-    { evo: ['swamporiaer', 16], rate: 45, xp: 64, learn: swampLearn, note: READ });
+    { evo: ['swamporiaer', 16], rate: 45, xp: 64, learn: swampLearn,
+      lore: 'It lives in the warm mud along Star Region riverbanks. The sprout on its head drinks in sunlight, so it can lie still for a whole day without eating. When something scares it, it curls up its tail and pretends to be a twig.' });
   S('swamporiaer', 2, 'Swamporiaer', ['Grass'], [120, 90, 125, 50, 50, 50],
-    { evo: ['swampest', 32], rate: 45, xp: 142, learn: swampLearn, note: READ + ' Some stats were hard to read.' });
+    { evo: ['swampest', 32], rate: 45, xp: 142, learn: swampLearn,
+      lore: 'It waits in shallow swamp water with only its eyes and the yellow spot on its cheek showing. Fish think the spot is a floating seed and swim right up to it. Its jaws can snap a fallen log in half.' });
   S('swampest', 3, 'Swampest', ['Grass'], [130, 95, 140, 85, 80, 30],
-    { rate: 45, xp: 236, learn: [...swampLearn, [36, 'bogchomp']], sig: 'bogchomp', note: READ + ' Signature move is a placeholder.' });
+    { rate: 45, xp: 236, learn: [...swampLearn, [36, 'bogchomp']], sig: 'bogchomp',
+      lore: 'The flower on its tail only opens when it is calm. People in Mossmire say that if the flower snaps shut, you should walk away slowly. One bite from its mud-soaked jaws leaves legs too heavy to run.' });
 
   // Fire starter line
   const flameLearn = [[1, 'scratch'], [1, 'growl'], [5, 'ember'], [9, 'quickattack'], [13, 'flamewheel'], [24, 'flamethrower']];
   S('flamber', 4, 'Flamber', ['Fire'], [40, 10, 40, 130, 40, 110],
-    { evo: ['flamezion', 16], rate: 45, xp: 62, learn: flameLearn, note: READ });
+    { evo: ['flamezion', 16], rate: 45, xp: 62, learn: flameLearn,
+      lore: 'Its one big eye sees heat instead of light, so it can find a warm rock to sleep on even in total darkness. The flame on its head flickers faster when it is happy. It sulks for days if it gets rained on.' });
   S('flamezion', 5, 'Flamezion', ['Fire'], [60, 20, 55, 160, 55, 125],
-    { evo: ['blazian', 32], rate: 45, xp: 142, learn: flameLearn, note: READ + ' Page says total 475.' });
+    { evo: ['blazian', 32], rate: 45, xp: 142, learn: flameLearn,
+      lore: 'The flames on its head form a crown that grows a little taller every time it wins a battle. Wild Flamber around Ember Point follow the Flamezion with the biggest crown and copy everything it does.' });
   S('blazian', 6, 'Blazian', ['Fire'], [80, 40, 60, 200, 60, 130],
-    { rate: 45, xp: 240, learn: [...flameLearn, [36, 'flamesofhealth']], sig: 'flamesofhealth', note: READ + ' 200cm tall.' });
+    { rate: 45, xp: 240, learn: [...flameLearn, [36, 'flamesofhealth']], sig: 'flamesofhealth', height: 200,
+      lore: 'The sun on its chest soaks up heat from every hit it lands, and Blazian turns that heat into healing. It has been seen walking into forest fires and walking out again with the fire gone and the trees still standing.' });
 
   // Water starter line
   const slimeLearn = [[1, 'tackle'], [1, 'growl'], [5, 'bubble'], [9, 'leer'], [12, 'slimeshot'], [24, 'slimeslam']];
   S('slimean', 7, 'Slimean', ['Water'], [60, 70, 65, 30, 65, 60],
-    { evo: ['slimarton', 16], rate: 45, xp: 63, learn: slimeLearn, note: READ + ' Stats add to 350, page says 370. 40cm tall.' });
+    { evo: ['slimarton', 16], rate: 45, xp: 63, learn: slimeLearn, height: 40,
+      lore: 'It bounces along the beach soaking up seawater to stay round and squishy. If it dries out it shrinks to the size of a pebble. Kids in Tidepool Town use sleeping Slimean as pillows, and the Slimean do not seem to mind.' });
   S('slimarton', 8, 'Slimarton', ['Water'], [80, 100, 70, 70, 70, 40],
-    { evo: ['slimontoon', 32], rate: 45, xp: 142, learn: slimeLearn, note: READ + ' 130cm tall.' });
+    { evo: ['slimontoon', 32], rate: 45, xp: 142, learn: slimeLearn, height: 130,
+      lore: 'Its five beaded arms grip rocks so tightly that storm waves cannot pull it loose. Every bead holds a ball of sticky slime. When it gets angry it flicks the beads off one at a time, and they grow back by morning.' });
   S('slimontoon', 9, 'Slimontoon', ['Water'], [100, 115, 100, 50, 100, 70],
-    { rate: 45, xp: 239, learn: [...slimeLearn, [36, 'slimesplit']], sig: 'slimesplit', note: READ + ' 600cm tall.' });
+    { rate: 45, xp: 239, learn: [...slimeLearn, [36, 'slimesplit']], sig: 'slimesplit', height: 600,
+      lore: 'At 600cm across it is the biggest Pokemon ever recorded in the Star Region. When it is hurt it pulls itself in two, and both halves keep fighting while they grow back. Sailors have watched the two halves swim apart and move in perfect time, as if they still share one mind.' });
 
-  // Bird line (names are placeholders)
+  // Bird line
   const birdLearn = [[1, 'peck'], [1, 'growl'], [5, 'gust'], [9, 'quickattack'], [15, 'wingattack']];
   S('peeplet', 10, 'Peeplet', ['Normal', 'Flying'], [40, 60, 25, 35, 30, 40],
-    { evo: ['featherdash', 14], rate: 255, xp: 50, learn: birdLearn, note: GUESS });
+    { evo: ['featherdash', 14], rate: 255, xp: 50, learn: birdLearn,
+      lore: 'You can find it almost anywhere in the Star Fields. Flocks of Peeplet start chirping the second the sun comes up, which is why nobody in Star City has ever needed an alarm clock.' });
   S('featherdash', 11, 'Featherdash', ['Normal', 'Flying'], [60, 70, 55, 60, 55, 110],
-    { evo: ['fiercebird', 30], rate: 120, xp: 122, learn: birdLearn, note: GUESS });
+    { evo: ['fiercebird', 30], rate: 120, xp: 122, learn: birdLearn,
+      lore: 'The eye shapes on its tail feathers scare off Pokemon much bigger than it. It runs faster than it flies. Featherdash love to race trainers down the routes, and they sulk when they lose.' });
   S('fiercebird', 12, 'Fiercebird', ['Flying'], [100, 110, 90, 70, 80, 90],
     { rate: 45, xp: 216, learn: [...birdLearn, [34, 'fierceblast']], sig: 'fierceblast',
-      note: 'Name is my best read of the page. Stats and signature move are placeholders.' });
+      lore: 'It nests on the highest cliffs above Galecrest. Each bead on its necklace is a stone it took from a rival it beat. When it dives, it moves so fast that the air bursts behind it with a bang you can hear across the whole route.' });
 
-  // Version legendaries (not designed yet)
+  // Version legendaries
   S('legend_freeze', 'L', '???', ['Ice'], [100, 90, 100, 130, 110, 100],
     { legendary: true, version: 'freeze', rate: 3, xp: 300,
       learn: [[1, 'icebeam'], [1, 'blizzard'], [1, 'gust'], [1, 'leer']],
-      note: 'Freeze Version legendary. Not designed yet, this is a stand-in.' });
+      lore: 'Old stories say a frozen star once fell into the shrine south of Star City. Nobody who has gone inside can describe what they saw. They only remember the cold.' });
   S('legend_flame', 'L', '???', ['Fire'], [100, 130, 90, 110, 100, 100],
     { legendary: true, version: 'flame', rate: 3, xp: 300,
       learn: [[1, 'fireblast'], [1, 'flamethrower'], [1, 'wingattack'], [1, 'leer']],
-      note: 'Flame Version legendary. Not designed yet, this is a stand-in.' });
+      lore: 'Old stories say a burning star once fell into the shrine south of Star City. Nobody who has gone inside can describe what they saw. They only remember the heat.' });
 
   const STARTERS = ['swampidile', 'flamber', 'slimean'];
 

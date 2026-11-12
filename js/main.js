@@ -501,6 +501,7 @@
       const k = list[i];
       if (!G.state.dex.seen[k] && !window.DEBUG.flags.revealDex) { await say('You have not seen this Pokemon yet.'); continue; }
       await showPage(() => drawDexEntry(k));
+      await showPage(() => drawDexLore(k));
     }
   }
 
@@ -526,7 +527,19 @@
       const mv = MOVES[sp.sig];
       for (const ln of wrap(`Signature: ${mv.name}. ${mv.desc}`, SW - 12)) { text(ln, 6, y, '#7a2a6a'); y += 10; }
     }
-    for (const ln of wrap(sp.note, SW - 12)) { if (y > SH - 10) break; text(ln, 6, y, '#777'); y += 10; }
+    text('A: read more', SW - 6, SH - 11, '#999', 'right');
+  }
+
+  function drawDexLore(k) {
+    const sp = SPECIES[k];
+    ctx.fillStyle = '#f4f1e6'; ctx.fillRect(0, 0, SW, SH);
+    drawSprite(k, false, 4, 2, 48);
+    text(`No.${String(sp.num).padStart(3, '0')}`, 58, 8, '#666');
+    text(sp.name.toUpperCase(), 58, 20);
+    let tx = 58; for (const t of sp.types) tx += typeTag(t, tx, 32) + 3;
+    if (sp.height) text(`${sp.height}cm`, SW - 8, 8, '#666', 'right');
+    ctx.fillStyle = '#d8d2c0'; ctx.fillRect(6, 53, SW - 12, 1);
+    wrap(sp.lore, SW - 16).forEach((ln, i) => text(ln, 8, 59 + i * 11, '#333'));
   }
 
   async function bagMenu() {

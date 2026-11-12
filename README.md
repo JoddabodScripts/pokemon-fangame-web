@@ -18,7 +18,7 @@ Open `index.html` in a browser. There's no build step and nothing to install.
 
 On a phone you get on-screen buttons instead.
 
-The game saves to your browser when you heal at a Pokemon Center, when you pick SAVE in the menu, and after every battle. Each version has its own save.
+The game saves to your browser when you heal at a Pokemon Center, when you pick SAVE in the menu (Esc, M, or the MENU button on phones), and after every battle. Each version has its own save.
 
 ## What's in it
 
@@ -39,8 +39,9 @@ Press ` or F2, or click DBG in the corner. You can also add `?debug` to the URL 
 - Fight any Pokemon at any level, or add it straight to your party.
 - One-hit KOs, take no damage, 100% catch, 10x EXP and instant text.
 - Win the current battle, heal the party, level up or evolve your lead Pokemon, fill your bag, reset the legendary.
+- Fill the Pokedex, which marks every Pokemon in your version as seen and caught.
 - An info overlay (FPS, tile coordinates, zone) and a zone color overlay.
-- Save, back to title, and delete save.
+- Back to title, and delete save.
 
 ## Changing things
 

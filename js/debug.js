@@ -3,7 +3,7 @@
 (function () {
   const DEFAULT_FLAGS = {
     noclip: false, fastWalk: false, noEncounters: false, encounterRate: 0.1,
-    fastText: false, revealDex: false, alwaysUnique: false, sureCatch: false,
+    fastText: false, alwaysUnique: false, sureCatch: false,
     oneHit: false, godMode: false, expBoost: false, showZones: false, showInfo: false,
   };
   let flags = { ...DEFAULT_FLAGS };
@@ -148,10 +148,17 @@
         }),
         button('99 balls + potions', () => { if (G().state) { G().state.bag.balls = 99; G().state.bag.potions = 99; log('Bag filled'); } }),
         button('Reset legendary', () => { if (G().state) { G().state.legendDone = false; log('Legendary can be fought again'); } })),
-      el('div', { class: 'row wrap' }, toggle('revealDex', 'Reveal whole Pokedex')),
+      el('div', { class: 'row wrap' },
+        button('Fill Pokedex (all seen + caught)', () => {
+          if (!G().state) return log('Start a game first.');
+          for (const k of D.ORDER) {
+            const sp = D.SPECIES[k];
+            if (!sp.legendary || sp.version === G().version) G().markCaught(k);
+          }
+          log('Pokedex filled');
+        })),
       el('h4', { text: 'Game' }),
       el('div', { class: 'row wrap' },
-        button('Save now', () => { if (G().state && G().saveGame()) log('Saved'); }),
         button('Back to title', () => { if (G().state && G().mode === 'overworld') G().saveGame(); location.reload(); }),
         button('Delete this version\'s save', () => {
           if (!confirm(`Delete the ${G().version.toUpperCase()} save?`)) return;

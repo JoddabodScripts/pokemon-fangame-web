@@ -397,13 +397,18 @@
   }
 
   // ---------------- menus ----------------
+  let menuIdx = 0;
   async function overworldMenu() {
     for (;;) {
-      const i = await choose(['POKEMON', 'POKEDEX', 'BAG', 'SAVE', 'EXIT'], { x: SW - 84, y: 4, w: 80 });
+      const i = await choose(['POKEMON', 'POKEDEX', 'BAG', 'SAVE', 'EXIT'], { x: SW - 84, y: 4, w: 80, start: menuIdx });
+      if (i >= 0) menuIdx = i;
       if (i === 0) await partyMenu(false);
       else if (i === 1) await dexMenu();
       else if (i === 2) await bagMenu();
-      else if (i === 3) { saveGame(); await say('Game saved.'); }
+      else if (i === 3) {
+        const yes = await choose(['YES', 'NO'], { prompt: 'Save your game? This replaces your old save for this version.' });
+        if (yes === 0) await say(saveGame() ? 'Game saved.' : 'Could not save. Your browser may be blocking storage.');
+      }
       else return;
     }
   }
@@ -482,13 +487,13 @@
       box(4, 16, 148, SH - 20);
       for (let r = 0; r < 11 && top + r < list.length; r++) {
         const k = list[top + r], sp = SPECIES[k];
-        const known = G.state.dex.seen[k] || window.DEBUG.flags.revealDex;
+        const known = G.state.dex.seen[k];
         const y = 22 + r * 14;
         text(`${String(sp.num).padStart(3, '0')} ${known ? sp.name.toUpperCase().slice(0, 11) : '-----'}`, 18, y, known ? '#222' : '#888');
         if (G.state.dex.caught[k]) { ctx.fillStyle = '#d03030'; ctx.fillRect(142, y + 2, 4, 4); }
         if (top + r === idx) cursor(10, y);
       }
-      const k = list[idx], known = G.state.dex.seen[k] || window.DEBUG.flags.revealDex;
+      const k = list[idx], known = G.state.dex.seen[k];
       box(154, 16, 100, 100, '#e8f0f8');
       drawSprite(k, false, 156, 18, 96, false, !known);
       text('A: info', 160, 122, '#fff');
@@ -499,7 +504,7 @@
       G.overlay = null;
       if (i < 0) return;
       const k = list[i];
-      if (!G.state.dex.seen[k] && !window.DEBUG.flags.revealDex) { await say('You have not seen this Pokemon yet.'); continue; }
+      if (!G.state.dex.seen[k]) { await say('You have not seen this Pokemon yet.'); continue; }
       await showPage(() => drawDexEntry(k));
       await showPage(() => drawDexLore(k));
     }

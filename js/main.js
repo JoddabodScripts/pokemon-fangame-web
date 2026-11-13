@@ -355,6 +355,7 @@
     camX = Math.max(0, Math.min(map.W * TS - SW, camX));
     camY = Math.max(0, Math.min(map.H * TS - SH, camY));
     const f = Math.floor(G.time * 2) % 2;
+    const pick = (arr, x, y) => arr[Math.floor(window.SPRITES.hash(x, y) * arr.length)];
     const x0 = Math.floor(camX / TS), y0 = Math.floor(camY / TS);
     for (let ty = y0; ty <= y0 + SH / TS + 1; ty++) {
       for (let tx = x0; tx <= x0 + SW / TS + 1; tx++) {
@@ -364,13 +365,13 @@
           case T.SEA: img = tiles.sea[f]; break;
           case T.WATER: img = tiles.water[f]; break;
           case T.TALL: img = tiles.tall; break;
-          case T.PATH: img = tiles.path; break;
-          case T.SAND: img = tiles.sand; break;
+          case T.PATH: img = pick(tiles.path, tx, ty); break;
+          case T.SAND: img = pick(tiles.sand, tx, ty); break;
           case T.TREE: img = tiles.tree; break;
-          case T.FLOWER: img = tiles.flower; break;
+          case T.FLOWER: img = pick(tiles.flower, tx, ty); break;
           case T.FLOOR: case T.BLD: case T.DOOR: img = tiles.floor; break;
           case T.SIGN: img = tiles.sign; break;
-          default: img = tiles.grass;
+          default: img = pick(tiles.grass, tx, ty);
         }
         ctx.drawImage(img, tx * TS - camX, ty * TS - camY);
       }
@@ -382,6 +383,7 @@
     }
     const frame = p.moving ? (p.t < 0.5 ? 1 + p.stepFrame : 0) : 0;
     const sx = Math.round(px - camX), sy = Math.round(py - camY) - 2;
+    ctx.fillStyle = 'rgba(0,0,0,0.22)'; ctx.beginPath(); ctx.ellipse(sx + 8, sy + 16, 5, 2, 0, 0, Math.PI * 2); ctx.fill();
     ctx.drawImage(G.playerSprites[p.dir][frame], sx, sy);
     if (map.get(p.x, p.y) === T.TALL && !(p.moving && p.t < 0.4)) ctx.drawImage(tiles.tallTop, p.x * TS - camX, p.y * TS - camY);
 

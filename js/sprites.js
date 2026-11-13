@@ -26,6 +26,12 @@
       }
     }
     circ(cx, cy, r, col) { this.ell(cx, cy, r, r, col); }
+    // shaded ellipse: dark edge, base fill, light spot up-left
+    ell3(cx, cy, rx, ry, dark, base, light) {
+      this.ell(cx, cy, rx, ry, dark);
+      this.ell(cx - 1, cy - 1, Math.max(1, rx - 1), Math.max(1, ry - 1), base);
+      if (light) this.ell(cx - Math.ceil(rx / 3), cy - Math.ceil(ry / 3), Math.max(1, Math.floor(rx / 3)), Math.max(1, Math.floor(ry / 3)), light);
+    }
     line(x0, y0, x1, y1, col, t = 1) {
       const n = Math.max(Math.abs(x1 - x0), Math.abs(y1 - y0), 1);
       for (let i = 0; i <= n; i++) {
@@ -87,78 +93,197 @@
   // All face left (toward the player's side when shown as a wild Pokemon).
   const DRAW = {
     swampidile(p) {
-      const g = '#5cb85a', d = '#2f7d3a', l = '#a6e08a';
-      p.line(5, 30, 2, 24, g, 2); p.circ(3, 22, 2, g);              // curled tail
+      // long lizard-centipede with a sprout on its head
+      const dk = '#1f5a2e', md = '#3f9a4a', bs = '#5cbf5a', lt = '#9ee07a', hl = '#d4f7a8', belly = '#e6e8a8';
+      // far legs
+      for (let i = 0; i < 6; i++) { const x = 9 + i * 5; p.line(x + 1, 30, x + 3, 36, dk); p.px(x + 4, 36, dk); }
+      // curled tail
+      p.circ(6, 27, 3, md); p.circ(4, 23, 2, md); p.circ(4, 20, 2, bs); p.circ(6, 18, 1, bs); p.px(7, 19, dk); p.px(5, 23, lt);
+      // body segments, each shaded
       for (let i = 0; i < 6; i++) {
-        const x = 7 + i * 5;
-        p.line(x, 31, x - 2, 37, d); p.line(x + 2, 31, x + 4, 37, d); // little legs
+        const x = 10 + i * 5;
+        p.ell3(x, 28, 4, 4, md, bs, lt);
+        p.px(x - 1, 25, hl);                    // shine on each segment
+        p.px(x + 3, 26, dk); p.px(x + 3, 27, dk); // groove between segments
       }
-      for (let i = 0; i < 6; i++) p.ell(7 + i * 5, 29, 3, 3, i % 2 ? g : '#4ea94d');
-      p.rect(6, 31, 30, 1, l);
-      p.ell(39, 28, 5, 4, g);                                        // head
-      p.px(41, 27, '#111'); p.px(43, 30, d);
-      p.line(38, 24, 38, 19, d); p.ell(36, 18, 2, 1, l); p.ell(40, 18, 2, 1, l); // sprout
+      p.rect(7, 31, 30, 2, belly); p.rect(7, 32, 30, 1, '#c8c880');
+      for (let i = 0; i < 6; i++) p.px(9 + i * 5, 31, '#b8b870');
+      // near legs
+      for (let i = 0; i < 6; i++) { const x = 8 + i * 5; p.line(x, 32, x - 1, 37, md); p.px(x - 2, 37, dk); p.px(x, 37, dk); }
+      // head
+      p.ell3(40, 27, 6, 5, md, bs, lt);
+      p.ell3(44, 28, 3, 3, md, bs, lt);
+      p.px(46, 27, dk);                          // nostril
+      p.line(40, 30, 46, 30, dk); p.px(39, 29, dk);
+      p.px(43, 31, '#f09ab0');                   // little blush
+      p.circ(39, 25, 2, '#fff'); p.rect(39, 24, 2, 3, '#1a1a1a'); p.px(40, 24, '#fff');
+      // sprout with two veined leaves
+      p.line(37, 22, 36, 15, dk);
+      p.poly([[36, 15], [28, 11], [30, 15], [34, 17]], bs); p.line(36, 15, 30, 13, md); p.px(31, 12, hl);
+      p.poly([[36, 15], [45, 10], [43, 14], [38, 17]], lt); p.line(36, 15, 43, 12, md); p.px(42, 11, hl);
     },
     swamporiaer(p) {
-      const g = '#3f9a4a', d = '#24663a', l = '#8fd07a';
-      p.line(40, 31, 45, 25, g, 3); p.line(45, 25, 44, 17, g, 3); p.circ(42, 15, 2, g); // tail curls up
-      p.rect(19, 34, 3, 7, d); p.rect(31, 34, 3, 7, d); p.rect(25, 35, 3, 6, d); p.rect(37, 34, 3, 6, d);
-      p.ell(28, 30, 13, 6, g);
-      p.rect(18, 33, 22, 2, l);
-      for (let i = 0; i < 6; i++) p.px(21 + i * 3, 23, d);          // back ridges
-      p.poly([[3, 25], [18, 23], [18, 29], [3, 28]], g);            // upper jaw
-      p.poly([[3, 30], [18, 30], [18, 34], [5, 33]], g);            // lower jaw
-      for (let x = 4; x < 18; x += 2) { p.px(x, 29, '#fff'); p.px(x + 1, 30, '#fff'); }
-      p.circ(15, 22, 2, '#fff'); p.px(15, 22, '#111');
-      p.circ(19, 28, 2, '#e9e36a'); p.px(19, 28, '#7a6a20');        // round marking from drawing
+      // crocodile with a sunny spot on its side and a curled tail
+      const dk = '#1d5233', md = '#2f8a46', bs = '#45a856', lt = '#7cc96e', hl = '#bfe8a0', belly = '#dbe3a0', bellyDk = '#b2bc78';
+      // tail curling up
+      const tail = [[38, 30, 4], [42, 27, 4], [45, 23, 3], [46, 19, 3], [45, 15, 2], [42, 13, 2], [40, 15, 1]];
+      for (const [x, y, r] of tail) p.circ(x + 1, y + 1, r, dk);
+      for (const [x, y, r] of tail) p.circ(x, y, r, bs);
+      for (const [x, y, r] of tail.slice(0, 5)) p.px(x - r + 1, y - 1, lt);
+      // far legs
+      p.rect(33, 33, 4, 7, dk); p.rect(21, 33, 4, 7, dk);
+      p.px(32, 40, '#e8e8d8'); p.px(20, 40, '#e8e8d8');
+      // body
+      p.ell3(27, 29, 13, 7, md, bs, lt);
+      p.ell(27, 33, 11, 3, belly);
+      for (let x = 18; x <= 36; x += 3) p.line(x, 31, x, 35, bellyDk);
+      // scales and back ridges
+      for (let x = 17; x <= 37; x += 4) { p.poly([[x, 23], [x + 2, 18], [x + 4, 23]], md); p.px(x + 2, 19, lt); }
+      for (const [x, y] of [[20, 26], [24, 25], [34, 26], [37, 28], [22, 29]]) p.px(x, y, hl);
+      // sunny marking
+      p.circ(30, 27, 3, '#e8c838'); p.circ(30, 27, 2, '#f8e870'); p.px(29, 26, '#fffbd0'); p.px(31, 28, '#c8a020');
+      // near legs with claws
+      p.rect(16, 33, 5, 8, md); p.rect(16, 33, 2, 8, bs); p.px(15, 41, '#f4f4e8'); p.px(17, 41, '#f4f4e8'); p.px(19, 41, '#f4f4e8');
+      p.rect(28, 34, 5, 7, md); p.rect(28, 34, 2, 7, bs); p.px(27, 41, '#f4f4e8'); p.px(29, 41, '#f4f4e8'); p.px(31, 41, '#f4f4e8');
+      // head: long snout, closed toothy mouth
+      p.poly([[1, 25], [5, 22], [19, 20], [21, 28], [2, 28]], bs);
+      p.line(5, 22, 18, 21, lt); p.px(3, 23, dk); p.px(5, 23, dk);   // nostrils
+      p.poly([[2, 29], [20, 29], [20, 34], [6, 33]], md);
+      p.rect(3, 28, 17, 1, '#3a1a1a');
+      for (let x = 4; x < 19; x += 2) { p.px(x, 27, '#fff'); p.px(x + 1, 29, '#fff'); }
+      // eye on a brow bump
+      p.ell3(15, 19, 3, 3, md, bs, lt);
+      p.circ(15, 19, 2, '#f8e870'); p.rect(15, 18, 1, 3, '#111'); p.px(14, 18, '#fff');
+      p.line(12, 16, 17, 17, dk);
     },
     swampest(p) {
-      const g = '#2f8a46', d = '#1d5a30', l = '#7cc96e';
-      p.line(36, 30, 42, 20, g, 4); p.line(42, 20, 40, 10, g, 3);   // tall tail/neck
-      for (const [dx, dy] of [[0, -3], [3, 0], [0, 3], [-3, 0]]) p.circ(40 + dx, 7 + dy, 2, '#f08ac0');
-      p.circ(40, 7, 1, '#ffe14a');                                   // flower
-      p.line(20, 36, 16, 44, d, 3); p.line(30, 36, 34, 44, d, 3);
-      p.line(24, 37, 23, 44, d, 3); p.line(36, 35, 40, 43, d, 3);
-      p.ell(27, 31, 12, 8, g);
-      p.rect(18, 35, 18, 2, l);
-      p.rect(25, 22, 3, 6, l); p.px(24, 26, d);                      // spike on back
-      p.poly([[1, 18], [17, 22], [17, 27], [2, 25]], g);            // upper jaw
-      p.poly([[2, 32], [17, 32], [17, 38], [4, 38]], g);            // lower jaw
-      p.rect(4, 26, 13, 6, '#8a2335');                               // open mouth
-      for (let x = 3; x < 17; x += 3) { p.poly([[x, 25], [x + 2, 25], [x + 1, 28]], '#fff'); p.poly([[x + 1, 32], [x + 3, 32], [x + 2, 29]], '#fff'); }
-      p.circ(13, 19, 2, '#fff'); p.px(12, 19, '#111');
+      // big open-mouthed croc with a flower on its tail
+      const dk = '#164a2a', md = '#267a40', bs = '#3a9a50', lt = '#6cbf66', hl = '#a8e08a', belly = '#d4dc98', bellyDk = '#a8b270';
+      // tall tail/neck with the flower
+      const neck = [[34, 30, 5], [38, 26, 4], [41, 22, 4], [42, 18, 3], [42, 14, 3], [41, 11, 2]];
+      for (const [x, y, r] of neck) p.circ(x + 1, y + 1, r, dk);
+      for (const [x, y, r] of neck) p.circ(x, y, r, bs);
+      for (const [x, y, r] of neck) p.px(x - r + 1, y, lt);
+      p.poly([[40, 11], [34, 8], [37, 12]], lt); p.poly([[42, 11], [47, 7], [45, 12]], md); // leaves
+      const petal = '#f08ac0', petalDk = '#c8508a';
+      for (let k = 0; k < 5; k++) { const a = (k * 72 - 90) * Math.PI / 180; p.circ(41 + Math.cos(a) * 3, 6 + Math.sin(a) * 3, 2, petal); p.px(41 + Math.cos(a) * 4, 6 + Math.sin(a) * 4, petalDk); }
+      p.circ(41, 6, 1, '#ffd84a'); p.px(41, 6, '#f08a20');
+      // far legs
+      p.rect(35, 35, 5, 8, dk); p.rect(23, 36, 5, 8, dk);
+      // body
+      p.ell3(26, 32, 13, 8, md, bs, lt);
+      p.ell(26, 37, 11, 3, belly);
+      for (let x = 17; x <= 35; x += 3) p.line(x, 35, x, 39, bellyDk);
+      for (let x = 17; x <= 35; x += 5) { p.poly([[x, 26], [x + 2, 20], [x + 4, 26]], md); p.px(x + 2, 21, hl); }
+      for (const [x, y] of [[20, 29], [27, 28], [32, 30], [23, 32]]) p.px(x, y, hl);
+      p.line(20, 40, 20, 43, md); p.line(29, 40, 29, 42, md); // hanging moss
+      // near legs with claws
+      p.rect(15, 36, 6, 9, md); p.rect(15, 36, 2, 9, bs);
+      p.rect(28, 37, 6, 8, md); p.rect(28, 37, 2, 8, bs);
+      for (const x of [14, 16, 18, 20, 27, 29, 31, 33]) p.px(x, x < 25 ? 45 : 45, '#f4f4e8');
+      // open jaws
+      p.poly([[0, 16], [6, 14], [19, 17], [20, 25], [1, 22]], bs);
+      p.line(6, 15, 18, 17, lt); p.px(2, 17, dk); p.px(4, 17, dk);
+      p.poly([[1, 23], [19, 25], [19, 33], [2, 32]], '#6a1424');       // mouth
+      p.ell(10, 31, 6, 2, '#e06080'); p.line(6, 31, 14, 31, '#b8406a');  // tongue
+      p.poly([[2, 33], [19, 32], [20, 38], [5, 38]], md);
+      p.line(5, 37, 18, 37, dk);
+      for (let x = 2; x < 18; x += 3) { p.poly([[x, 22], [x + 2, 23], [x + 1, 26]], '#fff'); p.poly([[x + 1, 33], [x + 3, 33], [x + 2, 30]], '#fff'); }
+      // angry eye
+      p.ell3(14, 15, 3, 3, md, bs, lt);
+      p.circ(14, 15, 2, '#f8d040'); p.rect(14, 14, 1, 3, '#111'); p.px(13, 14, '#fff');
+      p.line(11, 12, 17, 14, dk);
     },
     flamber(p) {
-      const o = '#f07a2a', y = '#ffd34a', r = '#d8452a';
-      p.poly([[17, 22], [22, 6], [25, 14], [28, 9], [31, 24]], r);
-      p.ell(24, 30, 9, 12, o);
-      p.ell(24, 34, 5, 7, y);
-      p.circ(24, 28, 4, '#fff'); p.circ(23, 28, 2, '#111'); p.px(22, 27, '#fff');
-      p.rect(19, 41, 3, 3, r); p.rect(26, 41, 3, 3, r);
+      // little flame egg with one big eye
+      const dk = '#a8221a', rd = '#d8452a', or = '#f07a2a', ye = '#ffc83a', pl = '#fff2a0';
+      // flame on top, three layers
+      p.poly([[15, 22], [17, 10], [20, 15], [23, 3], [26, 13], [29, 7], [31, 15], [33, 22]], rd);
+      p.poly([[18, 22], [20, 13], [22, 16], [24, 8], [26, 16], [28, 12], [30, 22]], or);
+      p.poly([[21, 22], [23, 14], [25, 18], [27, 15], [27, 22]], ye);
+      // stubby flame arms
+      p.poly([[14, 29], [8, 26], [10, 30], [7, 33], [14, 33]], rd); p.px(10, 29, or);
+      p.poly([[34, 29], [40, 26], [38, 30], [41, 33], [34, 33]], rd); p.px(38, 29, or);
+      // body bands
+      p.ell(24, 31, 10, 12, dk);
+      p.ell(23, 30, 9, 11, rd);
+      p.ell(23, 31, 7, 9, or);
+      p.ell(24, 35, 5, 6, ye);
+      p.ell(24, 37, 3, 3, pl);
+      p.px(17, 25, '#ff9a6a'); p.px(16, 27, '#ff9a6a'); // rim light
+      // big eye
+      p.circ(24, 27, 5, '#fff');
+      p.circ(24, 28, 3, '#e8a020'); p.circ(24, 28, 2, '#7a3a10'); p.circ(24, 28, 1, '#1a1010');
+      p.px(22, 25, '#fff'); p.px(23, 25, '#fff'); p.px(26, 30, '#fff');
+      p.line(19, 22, 21, 21, dk); p.line(27, 21, 29, 22, dk); // lash flicks
+      // tiny smile
+      p.px(22, 34, dk); p.px(23, 35, dk); p.px(24, 35, dk); p.px(25, 35, dk); p.px(26, 34, dk);
+      // feet
+      p.ell(19, 43, 3, 1, dk); p.ell(29, 43, 3, 1, dk); p.px(18, 42, rd); p.px(28, 42, rd);
+      // floating embers
+      p.px(8, 15, ye); p.px(40, 12, ye); p.px(38, 19, or); p.px(10, 20, or);
     },
     flamezion(p) {
-      const o = '#ea5a26', y = '#ffcf3e', r = '#c3321f';
-      p.poly([[12, 22], [14, 6], [18, 14], [21, 4], [24, 13], [27, 4], [30, 14], [34, 6], [36, 22]], r); // crown of flames
-      p.poly([[16, 20], [18, 12], [21, 17], [24, 10], [27, 17], [30, 12], [32, 20]], y);
-      p.ell(24, 30, 12, 13, o);
-      p.ell(24, 33, 7, 8, '#ff9a4a');
-      p.circ(20, 27, 2, '#111'); p.circ(28, 27, 2, '#111'); p.px(19, 26, '#fff'); p.px(27, 26, '#fff');
-      p.line(19, 33, 21, 35, '#111'); p.line(21, 35, 27, 35, '#111'); p.line(27, 35, 29, 33, '#111');
+      // a flame with a crown of fire and a big grin
+      const dk = '#9a1c14', rd = '#d8381f', or = '#f0702a', ye = '#ffc83a', pl = '#fff2a0', cheek = '#ff7a6a';
+      // crown: five flame spikes, layered
+      p.poly([[9, 22], [10, 8], [15, 15], [18, 2], [22, 13], [24, 0], [26, 13], [30, 2], [33, 15], [38, 8], [39, 22]], rd);
+      p.poly([[13, 21], [14, 12], [17, 16], [19, 7], [22, 16], [24, 6], [26, 16], [29, 7], [31, 16], [34, 12], [35, 21]], or);
+      p.poly([[17, 21], [19, 13], [22, 18], [24, 12], [26, 18], [29, 13], [31, 21]], ye);
+      p.px(24, 2, pl); p.px(18, 5, pl); p.px(30, 5, pl);
+      // side wisps
+      p.poly([[11, 30], [3, 24], [6, 31], [2, 35], [11, 36]], rd); p.poly([[10, 31], [6, 28], [8, 33], [10, 34]], or);
+      p.poly([[37, 30], [45, 24], [42, 31], [46, 35], [37, 36]], rd); p.poly([[38, 31], [42, 28], [40, 33], [38, 34]], or);
+      // body
+      p.ell(24, 31, 13, 13, dk);
+      p.ell(23, 30, 12, 12, rd);
+      p.ell(23, 30, 10, 10, or);
+      p.ell(24, 35, 7, 6, ye);
+      p.ell(20, 24, 3, 2, '#ffa060');
+      // flickering base instead of feet
+      p.poly([[13, 40], [16, 47], [19, 42], [22, 47], [25, 42], [28, 47], [31, 42], [34, 47], [35, 40]], rd);
+      p.poly([[17, 41], [19, 45], [22, 42], [25, 45], [28, 42], [31, 45], [32, 41]], or);
+      // face
+      p.ell(19, 27, 2, 3, '#1a1010'); p.ell(29, 27, 2, 3, '#1a1010');
+      p.px(18, 26, '#fff'); p.px(28, 26, '#fff');
+      p.ell(15, 32, 2, 1, cheek); p.ell(33, 32, 2, 1, cheek);
+      p.poly([[18, 32], [30, 32], [27, 37], [21, 37]], '#5a1010');
+      p.ell(24, 36, 3, 1, '#ff6a7a');
+      p.px(19, 32, '#fff'); p.px(20, 33, '#fff'); p.px(29, 32, '#fff'); p.px(28, 33, '#fff'); // fangs
     },
     blazian(p) {
-      const skin = '#ffd7a0', o = '#f0802e', r = '#d63a24', y = '#ffd84a';
-      p.poly([[13, 12], [12, 2], [17, 7], [19, 0], [23, 6], [26, 0], [29, 6], [33, 1], [34, 8], [37, 4], [35, 13]], r); // spiky hair
-      p.poly([[16, 11], [18, 5], [21, 9], [24, 4], [27, 9], [30, 5], [32, 11]], y);
-      p.line(20, 28, 9, 22, o, 3); p.line(28, 28, 39, 22, o, 3);     // arms
-      p.circ(8, 21, 3, skin); p.circ(40, 21, 3, skin);
-      p.line(21, 34, 15, 44, o, 3); p.line(27, 34, 33, 44, o, 3);    // legs
-      p.rect(12, 44, 5, 2, r); p.rect(32, 44, 5, 2, r);
-      p.circ(24, 15, 7, skin);
-      p.circ(21, 14, 1, '#111'); p.circ(27, 14, 2, '#111'); p.px(26, 13, '#fff');
-      p.line(21, 18, 23, 19, '#111'); p.line(23, 19, 27, 18, '#111');
-      p.circ(24, 29, 6, o);
-      p.circ(24, 29, 3, y);                                         // sun emblem
-      for (const [dx, dy] of [[0, -5], [5, 0], [0, 5], [-5, 0]]) p.px(24 + dx, 29 + dy, y);
+      // fire hero: flame hair, sun on its chest, arms out
+      const skin = '#ffd7a0', skinDk = '#e0a068', dk = '#9a2a14', rd = '#d63a24', or = '#f0802e', orLt = '#ffa858', ye = '#ffd84a', pl = '#fff2a0';
+      // flame hair, three layers
+      p.poly([[12, 14], [10, 3], [15, 8], [16, 0], [21, 6], [24, 0], [27, 6], [32, 0], [33, 8], [38, 3], [36, 14]], rd);
+      p.poly([[14, 13], [14, 6], [18, 9], [20, 3], [23, 8], [26, 3], [28, 8], [31, 4], [32, 9], [35, 6], [34, 13]], or);
+      p.poly([[17, 12], [19, 6], [22, 9], [24, 5], [26, 9], [29, 6], [31, 12]], ye);
+      // legs with flame boots
+      p.line(21, 34, 16, 43, or, 4); p.line(27, 34, 32, 43, or, 4);
+      p.line(20, 35, 16, 41, orLt); p.line(26, 35, 30, 41, orLt);
+      p.poly([[11, 42], [19, 41], [19, 46], [10, 46]], rd); p.poly([[29, 41], [37, 42], [38, 46], [29, 46]], rd);
+      p.px(12, 43, ye); p.px(36, 43, ye);
+      // arms with cuffs and round hands
+      p.line(19, 27, 9, 21, or, 4); p.line(29, 27, 39, 21, or, 4);
+      p.line(19, 26, 10, 20, orLt); p.line(29, 26, 38, 20, orLt);
+      p.rect(9, 20, 3, 4, rd); p.rect(36, 20, 3, 4, rd);
+      p.ell3(6, 19, 3, 3, skinDk, skin, '#fff0d0'); p.ell3(42, 19, 3, 3, skinDk, skin, '#fff0d0');
+      p.px(4, 17, skinDk); p.px(44, 17, skinDk);
+      // torso with belt and sun emblem
+      p.ell3(24, 29, 7, 7, dk, or, orLt);
+      p.rect(18, 34, 13, 2, dk); p.rect(23, 34, 3, 2, ye);
+      p.circ(24, 28, 3, ye); p.px(24, 28, pl);
+      for (const [dx, dy] of [[0, -5], [5, 0], [0, 5], [-5, 0], [4, -4], [-4, -4], [4, 4], [-4, 4]]) p.px(24 + dx, 28 + dy, ye);
+      // neck + head
+      p.rect(22, 20, 5, 3, skinDk);
+      p.ell3(24, 15, 7, 7, skinDk, skin, '#fff0d0');
+      p.px(17, 15, skinDk); p.px(31, 15, skinDk);
+      // face
+      p.rect(20, 13, 3, 3, '#1a1010'); p.px(20, 13, '#fff');
+      p.rect(26, 13, 3, 3, '#1a1010'); p.px(26, 13, '#fff');
+      p.line(19, 11, 22, 11, dk); p.line(26, 11, 29, 11, dk);
+      p.ell(18, 17, 1, 1, '#ff9a8a'); p.ell(30, 17, 1, 1, '#ff9a8a');
+      p.poly([[21, 18], [28, 18], [26, 20], [23, 20]], '#7a1a10'); p.rect(22, 18, 5, 1, '#fff');
     },
     slimean(p) {
       const b = '#4a8fe0', l = '#9cc8ff', d = '#2a5ea8';

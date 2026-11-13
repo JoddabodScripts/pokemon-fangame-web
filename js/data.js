@@ -60,8 +60,10 @@
     gust:        { name: 'Gust',         type: 'Flying', cat: 'spec', power: 40, acc: 100 },
     wingattack:  { name: 'Wing Attack',  type: 'Flying', cat: 'phys', power: 60, acc: 100 },
     fierceblast: { name: 'Fierce Blast', type: 'Flying', cat: 'phys', power: 100, acc: 90, sig: true,
-                   desc: 'A dive so fast the air bursts around it. 100 power, 90 accuracy.' },
+                   desc: 'A dive so fast the cold air bursts around it. 100 power, 90 accuracy.' },
 
+    powdersnow:  { name: 'Powder Snow',  type: 'Ice', cat: 'spec', power: 40, acc: 100 },
+    iceshard:    { name: 'Ice Shard',    type: 'Ice', cat: 'phys', power: 40, acc: 100, priority: 1 },
     icebeam:     { name: 'Ice Beam',     type: 'Ice', cat: 'spec', power: 90, acc: 100 },
     blizzard:    { name: 'Blizzard',     type: 'Ice', cat: 'spec', power: 110, acc: 70 },
   };
@@ -136,12 +138,13 @@
   S('peeplet', 10, 'Peeplet', ['Normal', 'Flying'], [40, 60, 25, 35, 30, 40],
     { evo: ['featherdash', 14], rate: 255, xp: 50, learn: birdLearn,
       lore: 'You can find it almost anywhere in the Star Fields. Flocks of Peeplet start chirping the second the sun comes up, which is why nobody in Star City has ever needed an alarm clock.' });
-  S('featherdash', 11, 'Featherdash', ['Normal', 'Flying'], [60, 70, 55, 60, 55, 110],
-    { evo: ['fiercebird', 30], rate: 120, xp: 122, learn: birdLearn,
-      lore: 'The eye shapes on its tail feathers scare off Pokemon much bigger than it. It runs faster than it flies. Featherdash love to race trainers down the routes, and they sulk when they lose.' });
-  S('fiercebird', 12, 'Fiercebird', ['Flying'], [100, 110, 90, 70, 80, 90],
-    { rate: 45, xp: 216, learn: [...birdLearn, [34, 'fierceblast']], sig: 'fierceblast',
-      lore: 'It nests on the highest cliffs above Galecrest. Each bead on its necklace is a stone it took from a rival it beat. When it dives, it moves so fast that the air bursts behind it with a bang you can hear across the whole route.' });
+  const snowLearn = [...birdLearn, [14, 'powdersnow'], [20, 'iceshard']];
+  S('featherdash', 11, 'Featherdash', ['Ice', 'Flying'], [60, 70, 55, 60, 55, 110],
+    { evo: ['fiercebird', 30], rate: 120, xp: 122, learn: snowLearn,
+      lore: 'When a Peeplet evolves, frost starts creeping into its feathers, and its tail eyes turn the color of ice. It runs faster than it flies and leaves a trail of frozen footprints. Featherdash love to race trainers down the routes, and they sulk when they lose.' });
+  S('fiercebird', 12, 'Fiercebird', ['Ice', 'Flying'], [100, 110, 90, 70, 80, 90],
+    { rate: 45, xp: 216, learn: [...snowLearn, [30, 'icebeam'], [34, 'fierceblast']], sig: 'fierceblast',
+      lore: 'By the time it is fully grown, every feather has turned to packed snow. It nests on the frozen cliffs above Galecrest. Each bead on its necklace is a chunk of ice it took from a rival it beat. When it dives, the cold air bursts behind it with a bang you can hear across the whole route.' });
 
   // Version legendaries
   S('legend_freeze', 'L', '???', ['Ice'], [100, 90, 100, 130, 110, 100],

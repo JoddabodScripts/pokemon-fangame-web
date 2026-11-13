@@ -22,7 +22,7 @@ The game saves to your browser when you heal at a Pokemon Center, when you pick 
 
 ## What's in it
 
-- 12 Pokemon from the notebook (001 to 012) and the 2 placeholder legendaries.
+- 12 Pokemon from the notebook (001 to 012) and the 2 placeholder legendaries. The bird line turns icy as it evolves: Peeplet is Normal/Flying, Featherdash and Fiercebird are Ice/Flying.
 - Six areas: Star City in the middle and a route plus town on each point of the star. Each route has different wild Pokemon and levels.
 - Battles with type matchups, catching, potions, switching, EXP, level ups, new moves and evolution.
 - Signature moves. Flames of Health (Blazian) and Slime Split (Slimontoon) work the way the notebook describes them. Bog Chomp (Swampest) and Fierce Blast (Fiercebird) are made up for now.
@@ -74,6 +74,7 @@ js/data.js      Pokemon, moves, types, stat formulas
 js/sprites.js   pixel art for Pokemon, tiles, buildings and the player
 js/map.js       builds the star map, towns, routes and wild encounter tables
 js/battle.js    battle system
+js/title.js     animated title screens (snow for Freeze, fire for Flame)
 js/debug.js     debug panel and overlays
 js/main.js      input, menus, overworld, save/load, title screen
 ```

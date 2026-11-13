@@ -568,30 +568,7 @@
   // ---------------- title + new game ----------------
   function drawTitle() {
     const idx = G.pickingVersion && UI.menu ? UI.menu.idx : G.version === 'flame' ? 1 : 0;
-    const flame = idx === 1;
-    const g = ctx.createLinearGradient(0, 0, 0, SH);
-    g.addColorStop(0, flame ? '#4a0e08' : '#06203f');
-    g.addColorStop(1, flame ? '#e0602a' : '#5ab4ee');
-    ctx.fillStyle = g; ctx.fillRect(0, 0, SW, SH);
-    // star
-    ctx.fillStyle = flame ? '#ffcf4a' : '#e6f8ff';
-    ctx.beginPath();
-    for (let k = 0; k < 10; k++) {
-      const a = ((-90 + k * 36) * Math.PI) / 180 + Math.sin(G.time) * 0.05, r = k % 2 ? 16 : 36;
-      ctx.lineTo(128 + Math.cos(a) * r, 52 + Math.sin(a) * r);
-    }
-    ctx.fill();
-    text('STAR REGION', SW / 2, 96, '#fff', 'center');
-    text(flame ? 'FLAME VERSION' : 'FREEZE VERSION', SW / 2, 110, flame ? '#ffd27a' : '#bff4ff', 'center');
-    text('fan-made prototype', SW / 2, 178, 'rgba(255,255,255,0.6)', 'center');
-    // a few particles: snow or embers
-    for (let i = 0; i < 24; i++) {
-      const s = window.SPRITES.hash(i, 7), t = (G.time * (0.1 + s * 0.15) + s) % 1;
-      const x = (i * 37 + Math.sin(G.time + i) * 8) % SW;
-      const y = flame ? SH - t * SH : t * SH;
-      ctx.fillStyle = flame ? '#ffb040' : '#fff';
-      ctx.fillRect(Math.round(x), Math.round(y), 2, 2);
-    }
+    window.TITLE.draw(ctx, idx === 1, G.time);
   }
 
   let starterIdx = 0;

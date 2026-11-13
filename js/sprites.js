@@ -197,31 +197,42 @@
       p.px(15, 21, '#111');
     },
     featherdash(p) {
-      const t = '#c98f4a', d = '#8c5a2a', c = '#f6e6c8';
+      // halfway to snowy: brown bird with frost creeping in
+      const t = '#c98f4a', d = '#8c5a2a', c = '#f6e6c8', snow = '#f4fbff', ice = '#9fdcf4';
       p.line(30, 28, 44, 30, d, 3);
-      for (const [x, y] of [[38, 26], [43, 32], [37, 34]]) { p.circ(x, y, 3, '#f0c86a'); p.circ(x, y, 1, '#3a7ad0'); }
+      p.line(36, 29, 44, 30, snow, 1);
+      for (const [x, y] of [[38, 26], [43, 32], [37, 34]]) { p.circ(x, y, 3, ice); p.circ(x, y, 1, '#2a6ac0'); }
       p.line(19, 33, 18, 42, '#e0a020'); p.line(25, 33, 26, 42, '#e0a020');
       p.rect(15, 42, 4, 1, '#e0a020'); p.rect(25, 42, 4, 1, '#e0a020');
       p.ell(23, 27, 11, 7, t);
       p.ell(22, 29, 6, 4, c);
       p.ell(27, 26, 6, 3, d);
+      p.ell(29, 24, 4, 2, snow);                      // snow settling on the back
+      p.rect(31, 26, 3, 1, snow);
       p.circ(12, 19, 5, t);
+      p.ell(12, 15, 4, 2, snow);                      // frosty cap
       p.poly([[8, 18], [1, 21], [8, 22]], '#f0a020');
       p.circ(12, 18, 1, '#111');
+      p.px(18, 24, ice); p.px(20, 33, ice); p.px(33, 22, '#fff');
     },
     fiercebird(p) {
-      const br = '#8a5a34', dk = '#5c3a1f', wh = '#f2ecdc', ye = '#f0b828', or = '#e8742a';
-      p.poly([[17, 22], [3, 6], [8, 18], [1, 20], [8, 26], [2, 32], [10, 33], [6, 40], [18, 34]], dk); // left wing
-      p.poly([[31, 22], [45, 6], [40, 18], [47, 20], [40, 26], [46, 32], [38, 33], [42, 40], [30, 34]], dk); // right wing
-      p.circ(39, 24, 2, or); p.circ(40, 30, 2, or);                  // gems on wing
-      p.poly([[19, 38], [24, 46], [29, 38]], dk);                    // tail spikes
-      p.ell(24, 30, 8, 10, br);
-      for (let i = 0; i < 4; i++) p.circ(24, 24 + i * 4, 1, wh);     // bead necklace
+      // fully snowy
+      const wing = '#bfe4f6', wingDk = '#7fbfe0', body = '#f4fbff', shade = '#d6ecf8', ye = '#f0b828', ice = '#7fd8ff';
+      p.poly([[17, 22], [3, 6], [8, 18], [1, 20], [8, 26], [2, 32], [10, 33], [6, 40], [18, 34]], wingDk); // left wing
+      p.poly([[16, 23], [6, 11], [10, 19], [5, 22], [10, 26], [6, 31], [12, 31], [17, 32]], wing);
+      p.poly([[31, 22], [45, 6], [40, 18], [47, 20], [40, 26], [46, 32], [38, 33], [42, 40], [30, 34]], wingDk); // right wing
+      p.poly([[32, 23], [42, 11], [38, 19], [43, 22], [38, 26], [42, 31], [36, 31], [31, 32]], wing);
+      p.poly([[38, 22], [40, 25], [38, 28], [36, 25]], ice); p.px(38, 24, '#fff');         // ice crystals on the wing
+      p.poly([[40, 28], [42, 31], [40, 34], [38, 31]], ice);
+      p.poly([[19, 38], [24, 46], [29, 38]], wingDk);   // tail spikes
+      p.ell(24, 30, 8, 10, body);
+      p.ell(26, 33, 4, 6, shade);
+      for (let i = 0; i < 4; i++) p.circ(24, 24 + i * 4, 1, ice); // necklace of ice beads
       p.line(20, 40, 18, 45, ye, 2); p.line(28, 40, 30, 45, ye, 2);
-      p.circ(24, 13, 7, wh);
-      p.poly([[17, 13], [11, 16], [14, 18], [18, 16]], ye);          // hooked beak
-      p.line(19, 9, 24, 11, '#111'); p.circ(21, 12, 1, '#c02020');   // angry brow + eye
-      p.poly([[22, 6], [25, 0], [27, 7]], wh); p.poly([[27, 7], [32, 3], [30, 10]], wh); // head crest
+      p.circ(24, 13, 7, body);
+      p.poly([[17, 13], [11, 16], [14, 18], [18, 16]], ye); // hooked beak
+      p.line(19, 9, 24, 11, '#1c2a4a'); p.circ(21, 12, 1, '#1e6ad0'); // brow + icy eye
+      p.poly([[22, 6], [25, 0], [27, 7]], wing); p.poly([[27, 7], [32, 3], [30, 10]], wing); // frosty crest
     },
     legend_freeze(p) {
       p.poly([[24, 1], [36, 14], [46, 12], [40, 26], [46, 40], [32, 36], [24, 47], [16, 36], [2, 40], [8, 26], [2, 12], [12, 14]], '#2a4a6a');

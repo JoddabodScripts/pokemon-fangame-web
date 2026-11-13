@@ -286,107 +286,169 @@
       p.poly([[21, 18], [28, 18], [26, 20], [23, 20]], '#7a1a10'); p.rect(22, 18, 5, 1, '#fff');
     },
     slimean(p) {
-      const b = '#4a8fe0', l = '#9cc8ff', d = '#2a5ea8';
-      p.ell(24, 30, 14, 12, b);
-      p.ell(24, 30, 9, 8, l);
-      p.ell(24, 31, 6, 5, b);
-      p.circ(21, 26, 1, '#111'); p.circ(27, 26, 1, '#111');
-      p.line(21, 33, 23, 35, d); p.line(23, 35, 25, 35, d); p.line(25, 35, 27, 33, d);
-      p.rect(16, 23, 3, 2, '#fff');
+      // round slime with a ring inside (from the notebook)
+      const dk = '#1e4f9a', md = '#2f6fc4', bs = '#4a8fe0', lt = '#8cc0ff', hl = '#e8f4ff';
+      p.ell(24, 42, 12, 2, md);                                   // puddle under it
+      p.rect(14, 38, 3, 5, bs); p.rect(32, 39, 2, 4, bs);         // drips
+      p.ell3(24, 30, 14, 12, dk, bs, lt);
+      p.ell(24, 31, 9, 8, md);
+      p.ell(24, 31, 8, 7, '#6aa8f0');
+      p.ell(23, 30, 5, 4, '#7cb6f6');
+      p.circ(18, 37, 1, '#b8d8ff'); p.px(31, 35, '#b8d8ff'); p.px(29, 38, '#b8d8ff'); // bubbles
+      p.rect(13, 23, 2, 5, hl); p.rect(15, 21, 3, 1, hl); p.px(15, 22, hl);       // gloss
+      p.ell(20, 28, 2, 3, '#0e1a3a'); p.ell(28, 28, 2, 3, '#0e1a3a');
+      p.px(19, 27, '#fff'); p.px(27, 27, '#fff'); p.px(21, 30, '#4a6aa0'); p.px(29, 30, '#4a6aa0');
+      p.line(21, 33, 23, 34, '#0e1a3a'); p.line(23, 34, 25, 34, '#0e1a3a'); p.line(25, 34, 27, 33, '#0e1a3a');
+      p.ell(16, 32, 1, 1, '#ff9ac0'); p.ell(32, 32, 1, 1, '#ff9ac0');
     },
     slimarton(p) {
-      const b = '#3d82d4', l = '#8cc0ff';
+      // slime body with five beaded arms
+      const dk = '#1a4a90', md = '#2a64b8', bs = '#3d82d4', lt = '#8cc0ff', hl = '#e8f4ff', alt = '#6aa8f0';
       for (const a of [-90, -18, 54, 126, 198]) {
         const rad = (a * Math.PI) / 180;
-        for (let j = 1; j <= 4; j++) p.circ(24 + Math.cos(rad) * (8 + j * 3.6), 24 + Math.sin(rad) * (8 + j * 3.6), 2, j % 2 ? l : b);
+        for (let j = 4; j >= 1; j--) {
+          const x = Math.round(24 + Math.cos(rad) * (8 + j * 3.6)), y = Math.round(25 + Math.sin(rad) * (8 + j * 3.6));
+          const r = j === 1 ? 3 : 2;
+          p.circ(x + 1, y + 1, r, dk); p.circ(x, y, r, j % 2 ? alt : bs); p.px(x - 1, y - 1, hl);
+        }
       }
-      p.circ(24, 24, 9, b);
-      p.circ(24, 24, 6, l);
-      p.circ(21, 22, 1, '#111'); p.circ(27, 22, 1, '#111');
-      p.line(21, 27, 23, 28, '#111'); p.line(23, 28, 25, 28, '#111'); p.line(25, 28, 27, 27, '#111');
+      p.ell3(24, 25, 9, 9, dk, bs, lt);
+      p.ell(24, 26, 6, 6, md); p.ell(24, 26, 5, 5, alt);
+      p.rect(17, 19, 1, 4, hl); p.px(18, 18, hl);
+      p.ell(21, 24, 1, 2, '#0e1a3a'); p.ell(27, 24, 1, 2, '#0e1a3a'); p.px(21, 23, '#fff'); p.px(27, 23, '#fff');
+      p.line(21, 28, 23, 29, '#0e1a3a'); p.line(23, 29, 25, 29, '#0e1a3a'); p.line(25, 29, 27, 28, '#0e1a3a');
+      p.px(18, 27, '#ff9ac0'); p.px(30, 27, '#ff9ac0');
     },
     slimontoon(p) {
-      const b = '#2f6fc4', l = '#7fb6ff';
+      // huge slime with eight beaded arms and a glowing core
+      const dk = '#15407e', md = '#2458a8', bs = '#2f6fc4', lt = '#7fb6ff', hl = '#e8f4ff', alt = '#5a98e8', glow = '#bfe4ff';
       for (let k = 0; k < 8; k++) {
         const rad = (k * 45 * Math.PI) / 180 - Math.PI / 2;
-        for (let j = 1; j <= 5; j++) p.circ(24 + Math.cos(rad) * (6 + j * 3.4), 24 + Math.sin(rad) * (6 + j * 3.4), 2, j % 2 ? l : b);
+        for (let j = 5; j >= 1; j--) {
+          const d = 6 + j * 3.3, x = Math.round(24 + Math.cos(rad) * d), y = Math.round(24 + Math.sin(rad) * d);
+          const r = j >= 5 ? 1 : 2;
+          p.circ(x + 1, y + 1, r, dk); p.circ(x, y, r, j % 2 ? alt : bs); p.px(x - 1, y - 1, j === 3 ? glow : hl);
+        }
       }
-      p.circ(24, 24, 8, b);
-      p.circ(24, 24, 5, l);
-      p.px(22, 22, '#111'); p.px(26, 22, '#111'); p.px(22, 21, '#111'); p.px(26, 21, '#111');
-      p.line(22, 26, 26, 26, '#111');
+      p.ell3(24, 24, 8, 8, dk, bs, lt);
+      p.ell(24, 25, 5, 5, md); p.ell(24, 25, 4, 4, alt); p.circ(24, 26, 2, glow);
+      p.rect(18, 19, 1, 3, hl);
+      p.line(19, 20, 22, 21, '#0e1a3a'); p.line(26, 21, 29, 20, '#0e1a3a');      // stern brows
+      p.rect(20, 22, 2, 2, '#0e1a3a'); p.rect(26, 22, 2, 2, '#0e1a3a'); p.px(20, 22, '#fff'); p.px(26, 22, '#fff');
+      p.line(22, 27, 26, 27, '#0e1a3a');
     },
     peeplet(p) {
-      const t = '#d9a35b', d = '#a8743a', c = '#fff2d8';
-      p.line(32, 29, 40, 24, d, 2); p.line(32, 31, 40, 28, d, 2);   // tail
-      p.line(22, 36, 21, 42, '#e0a020'); p.line(27, 36, 28, 42, '#e0a020');
-      p.ell(25, 30, 9, 7, t);
-      p.ell(24, 32, 5, 4, c);
-      p.ell(28, 29, 5, 3, d);                                        // wing
-      p.circ(16, 22, 5, t);
-      p.poly([[11, 21], [6, 23], [11, 25]], '#f0a020');
-      p.px(15, 21, '#111');
+      // small brown songbird
+      const t = '#d9a35b', td = '#a8743a', tdd = '#7a5228', tl = '#f0c888', c = '#fff2d8', cd = '#e8d0a8';
+      p.poly([[31, 27], [41, 21], [43, 24], [38, 28], [43, 29], [41, 33], [31, 31]], td);   // tail
+      p.line(33, 28, 40, 24, tdd); p.line(33, 30, 40, 30, tdd);
+      p.line(22, 35, 21, 41, '#d08a10'); p.line(27, 35, 28, 41, '#d08a10');
+      p.rect(18, 42, 4, 1, '#d08a10'); p.rect(27, 42, 4, 1, '#d08a10');
+      p.ell3(25, 30, 9, 7, td, t, tl);
+      p.ell(23, 33, 5, 3, c); p.line(19, 35, 27, 35, cd);
+      p.ell(28, 29, 6, 4, td);                                                       // wing
+      p.poly([[30, 26], [35, 27], [33, 30]], tdd);
+      p.line(24, 30, 32, 29, tdd); p.line(25, 32, 33, 31, tdd); p.px(26, 27, tl);
+      p.ell3(16, 22, 5, 5, td, t, tl);
+      p.line(17, 17, 18, 14, td); p.px(19, 14, td); p.px(16, 15, td);              // head tuft
+      p.ell(15, 25, 1, 1, '#ff9a8a');
+      p.poly([[11, 20], [5, 22], [11, 23]], '#f0a020'); p.poly([[11, 23], [6, 23], [11, 25]], '#c87810');
+      p.rect(14, 19, 2, 2, '#111'); p.px(14, 19, '#fff');
     },
     featherdash(p) {
-      // halfway to snowy: brown bird with frost creeping in
-      const t = '#c98f4a', d = '#8c5a2a', c = '#f6e6c8', snow = '#f4fbff', ice = '#9fdcf4';
-      p.line(30, 28, 44, 30, d, 3);
-      p.line(36, 29, 44, 30, snow, 1);
-      for (const [x, y] of [[38, 26], [43, 32], [37, 34]]) { p.circ(x, y, 3, ice); p.circ(x, y, 1, '#2a6ac0'); }
-      p.line(19, 33, 18, 42, '#e0a020'); p.line(25, 33, 26, 42, '#e0a020');
-      p.rect(15, 42, 4, 1, '#e0a020'); p.rect(25, 42, 4, 1, '#e0a020');
-      p.ell(23, 27, 11, 7, t);
-      p.ell(22, 29, 6, 4, c);
-      p.ell(27, 26, 6, 3, d);
-      p.ell(29, 24, 4, 2, snow);                      // snow settling on the back
-      p.rect(31, 26, 3, 1, snow);
-      p.circ(12, 19, 5, t);
-      p.ell(12, 15, 4, 2, snow);                      // frosty cap
-      // red scarf, tail fluttering back over the body
-      p.poly([[16, 22], [27, 18], [29, 21], [18, 26]], '#c8202a');
-      p.poly([[25, 19], [30, 16], [31, 19], [28, 21]], '#c8202a');
+      // halfway to snowy: brown bird with frost creeping in, red scarf
+      const t = '#c98f4a', td = '#8c5a2a', tdd = '#653e1c', tl = '#e8b878', c = '#f6e6c8', snow = '#f4fbff', snowSh = '#c8e4f4', ice = '#9fdcf4';
+      // long tail with icy eye-spots
+      p.poly([[30, 25], [45, 25], [47, 30], [45, 35], [30, 31]], td);
+      p.poly([[31, 27], [44, 27], [45, 30], [31, 30]], t);
+      p.line(33, 28, 44, 29, tdd);
+      for (const [x, y] of [[38, 26], [43, 31], [37, 34]]) { p.circ(x + 1, y + 1, 3, '#5a9ac0'); p.circ(x, y, 3, ice); p.circ(x, y, 1, '#2a6ac0'); p.px(x - 1, y - 1, '#fff'); }
+      // legs
+      p.line(19, 33, 18, 42, '#d08a10'); p.line(25, 33, 26, 42, '#d08a10');
+      p.rect(15, 42, 4, 1, '#d08a10'); p.rect(25, 42, 4, 1, '#d08a10');
+      // body
+      p.ell3(23, 27, 11, 7, td, t, tl);
+      p.ell(21, 30, 6, 4, c); p.line(16, 33, 26, 33, '#e0c8a0');
+      p.ell(27, 26, 6, 3, td); p.line(23, 27, 32, 26, tdd); p.line(24, 29, 33, 28, tdd);
+      // snow settling on the back and wing
+      p.ell(29, 23, 4, 2, snow); p.line(26, 25, 32, 25, snowSh); p.rect(31, 26, 3, 1, snow); p.px(33, 27, snow);
+      // head with frosty cap
+      p.ell3(12, 19, 5, 5, td, t, tl);
+      p.ell(12, 15, 4, 2, snow); p.line(9, 16, 15, 16, snowSh); p.px(10, 14, '#fff');
+      // red scarf, tail fluttering back
+      p.poly([[16, 22], [27, 18], [29, 21], [18, 26]], '#b81c26');
+      p.poly([[25, 19], [30, 16], [31, 19], [28, 21]], '#c8202a'); p.px(31, 17, '#9a1820');
       p.poly([[7, 22], [17, 21], [18, 25], [8, 26]], '#e0303a');
       p.rect(8, 23, 10, 1, '#ff6a6a'); p.rect(9, 25, 9, 1, '#9a1820');
-      p.poly([[8, 18], [1, 21], [8, 22]], '#f0a020');
-      // slight snowflake eye: a normal dark eye with a faint frosty cross
+      // beak
+      p.poly([[8, 18], [1, 20], [8, 21]], '#f0a020'); p.poly([[8, 21], [2, 21], [8, 22]], '#c87810');
+      // slight snowflake eye
       p.px(12, 17, '#9fdcf4'); p.px(12, 19, '#9fdcf4'); p.px(11, 18, '#9fdcf4'); p.px(13, 18, '#9fdcf4');
       p.px(12, 18, '#1c2a4a');
-      p.px(18, 24, ice); p.px(20, 33, ice); p.px(33, 22, '#fff');
+      p.px(18, 31, ice); p.px(35, 22, '#fff'); p.px(6, 13, '#fff');                 // frost sparkles
     },
     fiercebird(p) {
-      // fully snowy
-      const wing = '#bfe4f6', wingDk = '#7fbfe0', body = '#f4fbff', shade = '#d6ecf8', ye = '#f0b828', ice = '#7fd8ff';
-      p.poly([[17, 22], [3, 6], [8, 18], [1, 20], [8, 26], [2, 32], [10, 33], [6, 40], [18, 34]], wingDk); // left wing
-      p.poly([[16, 23], [6, 11], [10, 19], [5, 22], [10, 26], [6, 31], [12, 31], [17, 32]], wing);
-      p.poly([[31, 22], [45, 6], [40, 18], [47, 20], [40, 26], [46, 32], [38, 33], [42, 40], [30, 34]], wingDk); // right wing
-      p.poly([[32, 23], [42, 11], [38, 19], [43, 22], [38, 26], [42, 31], [36, 31], [31, 32]], wing);
-      p.poly([[38, 22], [40, 25], [38, 28], [36, 25]], ice); p.px(38, 24, '#fff');         // ice crystals on the wing
-      p.poly([[40, 28], [42, 31], [40, 34], [38, 31]], ice);
-      p.poly([[19, 38], [24, 46], [29, 38]], wingDk);   // tail spikes
-      p.ell(24, 30, 8, 10, body);
-      p.ell(26, 33, 4, 6, shade);
-      for (let i = 0; i < 4; i++) p.circ(24, 24 + i * 4, 1, ice); // necklace of ice beads
+      // fully snowy eagle with a red scarf and snowflake eye
+      const w3 = '#5f9fc8', w2 = '#8fc4e6', w1 = '#bfe4f6', w0 = '#e8f6ff', body = '#f4fbff', shade = '#d0e6f4', ye = '#f0b828', yeD = '#c08810', ice = '#7fd8ff';
+      const wingL = [[17, 22], [3, 6], [8, 18], [1, 20], [8, 26], [2, 32], [10, 33], [6, 40], [18, 34]];
+      const wingR = wingL.map(([x, y]) => [48 - x, y]);
+      p.poly(wingL, w3); p.poly(wingR, w3);
+      p.poly([[16, 23], [6, 11], [10, 19], [5, 22], [10, 26], [6, 31], [12, 31], [17, 32]], w2);
+      p.poly([[32, 23], [42, 11], [38, 19], [43, 22], [38, 26], [42, 31], [36, 31], [31, 32]], w2);
+      p.poly([[16, 24], [9, 16], [12, 21], [9, 24], [13, 27], [16, 29]], w1);
+      p.poly([[32, 24], [39, 16], [36, 21], [39, 24], [35, 27], [32, 29]], w1);
+      p.line(8, 18, 15, 25, w3); p.line(8, 26, 15, 28, w3); p.line(40, 18, 33, 25, w3); p.line(40, 26, 33, 28, w3);
+      p.px(5, 9, w0); p.px(43, 9, w0); p.px(4, 21, w0); p.px(44, 21, w0);
+      // ice crystals on the right wing
+      p.poly([[38, 22], [40, 25], [38, 28], [36, 25]], ice); p.px(38, 24, '#fff'); p.px(39, 26, '#4ab0e0');
+      p.poly([[40, 28], [42, 31], [40, 34], [38, 31]], ice); p.px(40, 30, '#fff');
+      // tail
+      p.poly([[19, 38], [21, 46], [24, 40], [27, 46], [29, 38]], w3); p.poly([[21, 39], [24, 44], [27, 39]], w2);
+      // body
+      p.ell3(24, 30, 8, 10, shade, body, '#ffffff');
+      p.ell(27, 33, 4, 6, shade);
+      for (let i = 0; i < 4; i++) { p.circ(24, 25 + i * 4, 1, ice); p.px(23, 24 + i * 4, '#fff'); }
+      p.line(19, 30, 21, 31, shade); p.line(26, 36, 28, 35, shade);
+      // talons
       p.line(20, 40, 18, 45, ye, 2); p.line(28, 40, 30, 45, ye, 2);
-      p.circ(24, 13, 7, body);
+      p.px(16, 46, '#333'); p.px(18, 47, '#333'); p.px(31, 46, '#333'); p.px(29, 47, '#333');
+      // head
+      p.ell3(24, 13, 7, 7, shade, body, '#ffffff');
+      p.poly([[22, 6], [25, 0], [27, 7]], w1); p.poly([[27, 7], [32, 3], [30, 10]], w1); p.px(25, 1, w0); // crest
       // red scarf with one end hanging down
-      p.poly([[28, 20], [32, 21], [34, 31], [30, 31]], '#c8202a');
-      p.rect(30, 31, 1, 2, '#c8202a'); p.rect(32, 31, 1, 2, '#c8202a'); p.rect(34, 31, 1, 1, '#c8202a');
+      p.poly([[28, 20], [32, 21], [34, 31], [30, 31]], '#b81c26');
+      p.rect(30, 31, 1, 2, '#b81c26'); p.rect(32, 31, 1, 2, '#b81c26'); p.rect(34, 31, 1, 1, '#b81c26');
       p.poly([[16, 18], [32, 18], [31, 23], [17, 23]], '#e0303a');
       p.rect(17, 19, 15, 1, '#ff6a6a'); p.rect(18, 22, 13, 1, '#9a1820');
-      p.poly([[17, 13], [11, 16], [14, 18], [18, 16]], ye); // hooked beak
-      p.circ(21, 13, 3, '#cfeeff'); p.flake5(21, 13, '#1e5ab8');   // snowflake eye
-      p.line(18, 8, 25, 10, '#1c2a4a');                               // angry brow
-      p.poly([[22, 6], [25, 0], [27, 7]], wing); p.poly([[27, 7], [32, 3], [30, 10]], wing); // frosty crest
+      // hooked beak
+      p.poly([[17, 12], [10, 15], [13, 18], [18, 16]], ye); p.poly([[13, 16], [10, 15], [12, 18]], yeD); p.px(15, 13, '#fff2a0');
+      // snowflake eye + brow
+      p.circ(21, 12, 3, '#cfeeff'); p.flake5(21, 12, '#1e5ab8');
+      p.line(17, 8, 25, 10, '#1c2a4a');
     },
     legend_freeze(p) {
-      p.poly([[24, 1], [36, 14], [46, 12], [40, 26], [46, 40], [32, 36], [24, 47], [16, 36], [2, 40], [8, 26], [2, 12], [12, 14]], '#2a4a6a');
-      p.poly([[24, 8], [32, 18], [38, 18], [34, 26], [38, 35], [30, 32], [24, 40], [18, 32], [10, 35], [14, 26], [10, 18], [16, 18]], '#4d7da8');
-      p.text('?', 24, 25, 22, '#bff4ff');
+      // faceted ice crystal with a question mark (design not made yet)
+      p.poly([[24, 1], [36, 14], [46, 12], [40, 26], [46, 40], [32, 36], [24, 47], [16, 36], [2, 40], [8, 26], [2, 12], [12, 14]], '#1e3a5a');
+      p.poly([[24, 5], [34, 16], [42, 15], [37, 26], [42, 37], [31, 33], [24, 43], [17, 33], [6, 37], [11, 26], [6, 15], [14, 16]], '#3a6a98');
+      // light facets on the left, dark on the right
+      p.poly([[24, 5], [14, 16], [24, 24]], '#8fc8ee'); p.poly([[6, 15], [14, 16], [11, 26]], '#6aa8d8');
+      p.poly([[24, 5], [34, 16], [24, 24]], '#4d7da8'); p.poly([[42, 15], [34, 16], [37, 26]], '#2a5580');
+      p.poly([[11, 26], [6, 37], [17, 33]], '#6aa8d8'); p.poly([[37, 26], [42, 37], [31, 33]], '#2a5580');
+      p.poly([[17, 33], [24, 43], [24, 30]], '#5a90c0'); p.poly([[31, 33], [24, 43], [24, 30]], '#2e6090');
+      p.line(24, 5, 24, 43, '#bfe8ff');
+      for (const [x, y] of [[24, 2], [3, 12], [45, 12], [3, 40], [45, 40]]) p.px(x, y, '#ffffff');
+      p.circ(24, 24, 9, '#2a5580'); p.circ(24, 24, 8, '#3a6a98');
+      p.text('?', 24, 25, 18, '#e0faff');
     },
     legend_flame(p) {
-      p.poly([[24, 1], [30, 12], [38, 6], [38, 20], [46, 18], [42, 34], [36, 46], [12, 46], [6, 34], [2, 18], [10, 20], [10, 6], [18, 12]], '#5a1e14');
-      p.poly([[24, 10], [29, 18], [34, 14], [34, 24], [39, 24], [36, 36], [31, 42], [17, 42], [12, 36], [9, 24], [14, 24], [14, 14], [19, 18]], '#9a3320');
-      p.text('?', 24, 28, 22, '#ffd27a');
+      // roaring fire shape with a question mark (design not made yet)
+      p.poly([[24, 1], [30, 12], [38, 4], [38, 20], [46, 16], [42, 34], [36, 46], [12, 46], [6, 34], [2, 16], [10, 20], [10, 4], [18, 12]], '#5a160e');
+      p.poly([[24, 6], [29, 15], [35, 10], [35, 22], [42, 20], [39, 33], [33, 43], [15, 43], [9, 33], [6, 20], [13, 22], [13, 10], [19, 15]], '#a82a18');
+      p.poly([[24, 12], [28, 19], [32, 16], [32, 26], [37, 26], [35, 35], [30, 41], [18, 41], [13, 35], [11, 26], [16, 26], [16, 16], [20, 19]], '#e0581f');
+      p.poly([[24, 20], [27, 25], [30, 24], [31, 32], [28, 39], [20, 39], [17, 32], [18, 24], [21, 25]], '#ffa030');
+      p.ell(24, 34, 5, 5, '#ffd84a');
+      for (const [x, y] of [[24, 2], [38, 5], [10, 5], [46, 17], [2, 17]]) p.px(x, y, '#ffe680');
+      p.text('?', 24, 29, 18, '#fff6d0');
     },
   };
 

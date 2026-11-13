@@ -217,8 +217,15 @@
       p.rect(31, 26, 3, 1, snow);
       p.circ(12, 19, 5, t);
       p.ell(12, 15, 4, 2, snow);                      // frosty cap
+      // red scarf, tail fluttering back over the body
+      p.poly([[16, 22], [27, 18], [29, 21], [18, 26]], '#c8202a');
+      p.poly([[25, 19], [30, 16], [31, 19], [28, 21]], '#c8202a');
+      p.poly([[7, 22], [17, 21], [18, 25], [8, 26]], '#e0303a');
+      p.rect(8, 23, 10, 1, '#ff6a6a'); p.rect(9, 25, 9, 1, '#9a1820');
       p.poly([[8, 18], [1, 21], [8, 22]], '#f0a020');
-      p.circ(12, 18, 3, '#ffffff'); p.flake5(12, 18, '#1e5ab8');   // snowflake eye
+      // slight snowflake eye: a normal dark eye with a faint frosty cross
+      p.px(12, 17, '#9fdcf4'); p.px(12, 19, '#9fdcf4'); p.px(11, 18, '#9fdcf4'); p.px(13, 18, '#9fdcf4');
+      p.px(12, 18, '#1c2a4a');
       p.px(18, 24, ice); p.px(20, 33, ice); p.px(33, 22, '#fff');
     },
     fiercebird(p) {
@@ -236,6 +243,11 @@
       for (let i = 0; i < 4; i++) p.circ(24, 24 + i * 4, 1, ice); // necklace of ice beads
       p.line(20, 40, 18, 45, ye, 2); p.line(28, 40, 30, 45, ye, 2);
       p.circ(24, 13, 7, body);
+      // red scarf with one end hanging down
+      p.poly([[28, 20], [32, 21], [34, 31], [30, 31]], '#c8202a');
+      p.rect(30, 31, 1, 2, '#c8202a'); p.rect(32, 31, 1, 2, '#c8202a'); p.rect(34, 31, 1, 1, '#c8202a');
+      p.poly([[16, 18], [32, 18], [31, 23], [17, 23]], '#e0303a');
+      p.rect(17, 19, 15, 1, '#ff6a6a'); p.rect(18, 22, 13, 1, '#9a1820');
       p.poly([[17, 13], [11, 16], [14, 18], [18, 16]], ye); // hooked beak
       p.circ(21, 13, 3, '#cfeeff'); p.flake5(21, 13, '#1e5ab8');   // snowflake eye
       p.line(18, 8, 25, 10, '#1c2a4a');                               // angry brow

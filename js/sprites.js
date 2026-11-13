@@ -65,6 +65,12 @@
       for (let i = 3; i < d.data.length; i += 4) d.data[i] = d.data[i] >= 110 ? 255 : 0;
       this.g.putImageData(d, 0, 0);
     }
+    // 5x5 snowflake, used as an eye on the Ice birds
+    flake5(cx, cy, col) {
+      ['X.X.X', '.XXX.', 'XX.XX', '.XXX.', 'X.X.X'].forEach((row, j) => {
+        for (let i = 0; i < 5; i++) if (row[i] === 'X') this.px(cx + i - 2, cy + j - 2, col);
+      });
+    }
     outline(col = OUTLINE) {
       const d = this.g.getImageData(0, 0, this.w, this.h);
       const a = d.data, w = this.w, h = this.h;
@@ -212,7 +218,7 @@
       p.circ(12, 19, 5, t);
       p.ell(12, 15, 4, 2, snow);                      // frosty cap
       p.poly([[8, 18], [1, 21], [8, 22]], '#f0a020');
-      p.circ(12, 18, 1, '#111');
+      p.circ(12, 18, 3, '#ffffff'); p.flake5(12, 18, '#1e5ab8');   // snowflake eye
       p.px(18, 24, ice); p.px(20, 33, ice); p.px(33, 22, '#fff');
     },
     fiercebird(p) {
@@ -231,7 +237,8 @@
       p.line(20, 40, 18, 45, ye, 2); p.line(28, 40, 30, 45, ye, 2);
       p.circ(24, 13, 7, body);
       p.poly([[17, 13], [11, 16], [14, 18], [18, 16]], ye); // hooked beak
-      p.line(19, 9, 24, 11, '#1c2a4a'); p.circ(21, 12, 1, '#1e6ad0'); // brow + icy eye
+      p.circ(21, 13, 3, '#cfeeff'); p.flake5(21, 13, '#1e5ab8');   // snowflake eye
+      p.line(18, 8, 25, 10, '#1c2a4a');                               // angry brow
       p.poly([[22, 6], [25, 0], [27, 7]], wing); p.poly([[27, 7], [32, 3], [30, 10]], wing); // frosty crest
     },
     legend_freeze(p) {

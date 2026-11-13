@@ -252,38 +252,43 @@
       p.px(19, 32, '#fff'); p.px(20, 33, '#fff'); p.px(29, 32, '#fff'); p.px(28, 33, '#fff'); // fangs
     },
     blazian(p) {
-      // fire hero: flame hair, sun on its chest, arms out
-      const skin = '#ffd7a0', skinDk = '#e0a068', dk = '#9a2a14', rd = '#d63a24', or = '#f0802e', orLt = '#ffa858', ye = '#ffd84a', pl = '#fff2a0';
-      // flame hair, three layers
-      p.poly([[12, 14], [10, 3], [15, 8], [16, 0], [21, 6], [24, 0], [27, 6], [32, 0], [33, 8], [38, 3], [36, 14]], rd);
-      p.poly([[14, 13], [14, 6], [18, 9], [20, 3], [23, 8], [26, 3], [28, 8], [31, 4], [32, 9], [35, 6], [34, 13]], or);
-      p.poly([[17, 12], [19, 6], [22, 9], [24, 5], [26, 9], [29, 6], [31, 12]], ye);
-      // legs with flame boots
-      p.line(21, 34, 16, 43, or, 4); p.line(27, 34, 32, 43, or, 4);
-      p.line(20, 35, 16, 41, orLt); p.line(26, 35, 30, 41, orLt);
-      p.poly([[11, 42], [19, 41], [19, 46], [10, 46]], rd); p.poly([[29, 41], [37, 42], [38, 46], [29, 46]], rd);
-      p.px(12, 43, ye); p.px(36, 43, ye);
-      // arms with cuffs and round hands
-      p.line(19, 27, 9, 21, or, 4); p.line(29, 27, 39, 21, or, 4);
-      p.line(19, 26, 10, 20, orLt); p.line(29, 26, 38, 20, orLt);
-      p.rect(9, 20, 3, 4, rd); p.rect(36, 20, 3, 4, rd);
-      p.ell3(6, 19, 3, 3, skinDk, skin, '#fff0d0'); p.ell3(42, 19, 3, 3, skinDk, skin, '#fff0d0');
-      p.px(4, 17, skinDk); p.px(44, 17, skinDk);
-      // torso with belt and sun emblem
-      p.ell3(24, 29, 7, 7, dk, or, orLt);
-      p.rect(18, 34, 13, 2, dk); p.rect(23, 34, 3, 2, ye);
-      p.circ(24, 28, 3, ye); p.px(24, 28, pl);
-      for (const [dx, dy] of [[0, -5], [5, 0], [0, 5], [-5, 0], [4, -4], [-4, -4], [4, 4], [-4, 4]]) p.px(24 + dx, 28 + dy, ye);
-      // neck + head
-      p.rect(22, 20, 5, 3, skinDk);
-      p.ell3(24, 15, 7, 7, skinDk, skin, '#fff0d0');
-      p.px(17, 15, skinDk); p.px(31, 15, skinDk);
-      // face
-      p.rect(20, 13, 3, 3, '#1a1010'); p.px(20, 13, '#fff');
-      p.rect(26, 13, 3, 3, '#1a1010'); p.px(26, 13, '#fff');
-      p.line(19, 11, 22, 11, dk); p.line(26, 11, 29, 11, dk);
-      p.ell(18, 17, 1, 1, '#ff9a8a'); p.ell(30, 17, 1, 1, '#ff9a8a');
-      p.poly([[21, 18], [28, 18], [26, 20], [23, 20]], '#7a1a10'); p.rect(22, 18, 5, 1, '#fff');
+      // sun spirit: a mane of flames around its head, a sun on its chest, fireballs for hands
+      const dk = '#8a1e10', rd = '#d63a24', or = '#f0782a', orLt = '#ffa858', ye = '#ffd84a', pl = '#fff4b8';
+      const face = '#ffe6a8', faceDk = '#f0b860';
+      // floating embers
+      for (const [x, y, c] of [[3, 30, ye], [44, 32, or], [6, 40, or], [42, 41, ye], [40, 3, ye]]) p.px(x, y, c);
+      // legs with flame feet
+      p.line(21, 35, 17, 42, or, 4); p.line(27, 35, 31, 42, or, 4);
+      p.line(20, 36, 17, 40, orLt); p.line(26, 36, 29, 40, orLt);
+      p.poly([[12, 43], [15, 39], [19, 41], [21, 46], [12, 46]], rd); p.poly([[14, 45], [16, 41], [19, 43], [19, 46]], ye);
+      p.poly([[27, 41], [33, 39], [36, 43], [36, 46], [27, 46]], rd); p.poly([[29, 46], [30, 43], [33, 41], [34, 46]], ye);
+      // arms up and out, with flame bands
+      p.line(19, 27, 10, 21, or, 4); p.line(29, 27, 38, 21, or, 4);
+      p.line(18, 26, 11, 21, orLt); p.line(30, 26, 37, 21, orLt);
+      p.line(14, 22, 15, 26, rd, 2); p.line(34, 22, 33, 26, rd, 2);
+      // fireball hands
+      for (const x of [6, 42]) { p.circ(x, 19, 5, rd); p.circ(x, 19, 4, or); p.circ(x, 19, 2, ye); p.px(x - 1, 18, pl); }
+      p.poly([[3, 15], [5, 9], [7, 14]], or); p.poly([[41, 14], [43, 8], [45, 15]], or);
+      // torso with the sun on its chest
+      p.ell3(24, 30, 6, 7, dk, or, orLt);
+      p.rect(19, 35, 11, 2, rd);
+      p.circ(24, 29, 3, ye); p.px(24, 29, pl); p.px(23, 28, pl);
+      for (const [dx, dy] of [[0, -5], [5, 0], [0, 5], [-5, 0], [4, -4], [-4, -4], [4, 4], [-4, 4]]) p.px(24 + dx, 29 + dy, ye);
+      // flame mane all the way around the head, like the sun
+      for (let k = 0; k < 12; k++) {
+        const a = (k * 30 - 90) * Math.PI / 180, a1 = a - 0.26, a2 = a + 0.26;
+        const r = k % 2 ? 11 : 14;
+        p.poly([[24 + Math.cos(a1) * 6, 13 + Math.sin(a1) * 6], [24 + Math.cos(a) * r, 13 + Math.sin(a) * r], [24 + Math.cos(a2) * 6, 13 + Math.sin(a2) * 6]], k % 2 ? or : rd);
+      }
+      p.circ(24, 13, 9, or);
+      p.circ(24, 13, 8, ye);
+      // glowing face
+      p.ell3(24, 14, 6, 6, faceDk, face, pl);
+      p.poly([[17, 15], [19, 14], [19, 16]], rd); p.poly([[31, 15], [29, 14], [29, 16]], rd);   // flame cheek marks
+      p.rect(20, 12, 3, 3, '#2a0a06'); p.px(21, 13, '#ff8a2a'); p.px(20, 12, '#ffffff');
+      p.rect(26, 12, 3, 3, '#2a0a06'); p.px(27, 13, '#ff8a2a'); p.px(26, 12, '#ffffff');
+      p.line(19, 10, 22, 11, dk); p.line(26, 11, 29, 10, dk);
+      p.poly([[21, 17], [27, 17], [25, 19], [23, 19]], '#7a1a10'); p.px(22, 17, '#ffffff'); p.px(26, 17, '#ffffff');
     },
     slimean(p) {
       // round slime with a ring inside (from the notebook)

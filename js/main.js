@@ -610,7 +610,10 @@
 
   function startFromSave(save) {
     G.state = save;
-    for (const m of [...save.party, ...save.box]) window.DATA.calcStats(m);
+    for (const m of [...save.party, ...save.box]) {
+      m.moves = m.moves.map((k) => (k === 'fierceblast' ? 'brittleblast' : k)); // renamed move
+      window.DATA.calcStats(m);
+    }
     placePlayer(save.pos.x, save.pos.y, save.pos.dir);
     G.mode = 'overworld';
   }

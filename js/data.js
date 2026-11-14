@@ -59,13 +59,13 @@
     peck:        { name: 'Peck',         type: 'Flying', cat: 'phys', power: 35, acc: 100 },
     gust:        { name: 'Gust',         type: 'Flying', cat: 'spec', power: 40, acc: 100 },
     wingattack:  { name: 'Wing Attack',  type: 'Flying', cat: 'phys', power: 60, acc: 100 },
-    fierceblast: { name: 'Fierce Blast', type: 'Flying', cat: 'phys', power: 100, acc: 90, sig: true,
-                   desc: 'A dive so fast the cold air bursts around it. 100 power, 90 accuracy.' },
-
     powdersnow:  { name: 'Powder Snow',  type: 'Ice', cat: 'spec', power: 40, acc: 100 },
     iceshard:    { name: 'Ice Shard',    type: 'Ice', cat: 'phys', power: 40, acc: 100, priority: 1 },
     icebeam:     { name: 'Ice Beam',     type: 'Ice', cat: 'spec', power: 90, acc: 100 },
     blizzard:    { name: 'Blizzard',     type: 'Ice', cat: 'spec', power: 110, acc: 70 },
+    brittleblast:{ name: 'Brittle Blast', type: 'Ice', cat: 'phys', power: 90, acc: 95, sig: true,
+                   effect: { target: 'foe', stat: 'def', stages: -1, chance: 100 },
+                   desc: 'A freezing dive that leaves the target brittle. 90 power, 95 accuracy. Lowers the target\'s Defense.' },
   };
 
   const SPECIES = {};
@@ -90,20 +90,19 @@
     ORDER.push(key);
   }
 
-  // Designer notes (not shown in game). Stats were read from blurry notebook photos:
-  // - Swamporiaer and the three birds were hard to read; bird stats are partly guesses.
-  // - Flamezion adds to 485, page says 475. Slimean adds to 350, page says 370.
-  // - Peeplet and Featherdash names are placeholders. Fiercebird is a best reading.
-  // - Bog Chomp and Fierce Blast are placeholder signature moves.
-  // - Both legendaries are stand-ins until they get designed.
+  // Designer notes (not shown in game):
+  // - The notebook only gives Featherdash's HP 60, Atk 70 and a 440 total. Def, SpA, SpD and Spe are made up to fit.
+  // - Slimean's page says 370 total but its stats added to 350. SpA was raised from 30 to 50 to match (the 3 may be a 5).
+  // - The designers left Bog Chomp's and Brittle Blast's effects and the town names to us, so those are made up.
+  // - Both legendaries, the robot with a hammer and the bee swarm aren't finished yet.
 
   // Grass starter line
   const swampLearn = [[1, 'tackle'], [1, 'growl'], [5, 'vinewhip'], [9, 'leer'], [13, 'razorleaf'], [20, 'gigadrain']];
   S('swampidile', 1, 'Swampidile', ['Grass'], [50, 50, 100, 50, 50, 80],
     { evo: ['swamporiaer', 16], rate: 45, xp: 64, learn: swampLearn,
       lore: 'It lives in the warm mud along Star Region riverbanks. The sprout on its head drinks in sunlight, so it can lie still for a whole day without eating. When something scares it, it curls up its tail and pretends to be a twig.' });
-  S('swamporiaer', 2, 'Swamporiaer', ['Grass'], [120, 90, 125, 50, 50, 50],
-    { evo: ['swampest', 32], rate: 45, xp: 142, learn: swampLearn,
+  S('swamporiaer', 2, 'Swamporiaer', ['Grass'], [120, 70, 135, 70, 80, 30],
+    { evo: ['swampest', 32], rate: 45, xp: 142, learn: swampLearn, height: 150,
       lore: 'It waits in shallow swamp water with only its eyes and the yellow spot on its cheek showing. Fish think the spot is a floating seed and swim right up to it. Its jaws can snap a fallen log in half.' });
   S('swampest', 3, 'Swampest', ['Grass'], [130, 95, 140, 85, 80, 30],
     { rate: 45, xp: 236, learn: [...swampLearn, [36, 'bogchomp']], sig: 'bogchomp',
@@ -123,7 +122,7 @@
 
   // Water starter line
   const slimeLearn = [[1, 'tackle'], [1, 'growl'], [5, 'bubble'], [9, 'leer'], [12, 'slimeshot'], [24, 'slimeslam']];
-  S('slimean', 7, 'Slimean', ['Water'], [60, 70, 65, 30, 65, 60],
+  S('slimean', 7, 'Slimean', ['Water'], [60, 70, 65, 50, 65, 60],
     { evo: ['slimarton', 16], rate: 45, xp: 63, learn: slimeLearn, height: 40,
       lore: 'It bounces along the beach soaking up seawater to stay round and squishy. If it dries out it shrinks to the size of a pebble. Kids in Tidepool Town use sleeping Slimean as pillows, and the Slimean do not seem to mind.' });
   S('slimarton', 8, 'Slimarton', ['Water'], [80, 100, 70, 70, 70, 40],
@@ -135,16 +134,16 @@
 
   // Bird line
   const birdLearn = [[1, 'peck'], [1, 'growl'], [5, 'gust'], [9, 'quickattack'], [15, 'wingattack']];
-  S('peeplet', 10, 'Peeplet', ['Normal', 'Flying'], [40, 60, 25, 35, 30, 40],
-    { evo: ['featherdash', 14], rate: 255, xp: 50, learn: birdLearn,
+  S('peeplet', 10, 'Peeplet', ['Flying'], [40, 60, 25, 25, 30, 40],
+    { evo: ['featherdash', 14], rate: 255, xp: 50, learn: birdLearn, height: 15,
       lore: 'You can find it almost anywhere in the Star Fields. Flocks of Peeplet start chirping the second the sun comes up, which is why nobody in Star City has ever needed an alarm clock.' });
   const snowLearn = [...birdLearn, [14, 'powdersnow'], [20, 'iceshard']];
-  S('featherdash', 11, 'Featherdash', ['Ice', 'Flying'], [60, 70, 55, 60, 55, 110],
-    { evo: ['fiercebird', 30], rate: 120, xp: 122, learn: snowLearn,
+  S('featherdash', 11, 'Featherdash', ['Ice', 'Flying'], [60, 70, 65, 75, 70, 100],
+    { evo: ['fiercebird', 30], rate: 120, xp: 122, learn: snowLearn, height: 120,
       lore: 'When a Peeplet evolves, frost starts creeping into its feathers, and its tail eyes turn the color of ice. It runs faster than it flies and leaves a trail of frozen footprints. Featherdash love to race trainers down the routes, and they sulk when they lose.' });
-  S('fiercebird', 12, 'Fiercebird', ['Ice', 'Flying'], [100, 110, 90, 70, 80, 90],
-    { rate: 45, xp: 216, learn: [...snowLearn, [30, 'icebeam'], [34, 'fierceblast']], sig: 'fierceblast',
-      lore: 'By the time it is fully grown, every feather has turned to packed snow. It nests on the frozen cliffs above Galecrest. Each bead on its necklace is a chunk of ice it took from a rival it beat. When it dives, the cold air bursts behind it with a bang you can hear across the whole route.' });
+  S('fiercebird', 12, 'Fiercebird', ['Ice', 'Flying'], [100, 110, 80, 90, 80, 80],
+    { rate: 45, xp: 216, learn: [...snowLearn, [30, 'icebeam'], [34, 'brittleblast']], sig: 'brittleblast', height: 550,
+      lore: 'By the time it is fully grown, every feather has turned to packed snow. It nests on the frozen cliffs above Galecrest. Each bead on its necklace is a chunk of ice it took from a rival it beat. When it dives, the air around it freezes so hard that whatever it hits cracks like thin ice.' });
 
   // Version legendaries
   S('legend_freeze', 'L', '???', ['Ice'], [100, 90, 100, 130, 110, 100],

@@ -69,7 +69,7 @@ def stage(rig, quality):
     sc.cycles.max_bounces = 4 if quality == 'tpose' else 3
     sc.render.use_persistent_data = True
     sc.view_settings.view_transform = 'AgX'
-    sc.view_settings.look = 'AgX - Medium High Contrast'
+    sc.view_settings.look = 'AgX - Punchy'
     sc.render.film_transparent = False
 
     # sky
@@ -215,6 +215,10 @@ T_BALL, T_OPEN, T_OUT, T_CRY, T_IDLE, T_TURN, T_WALK_END, T_BACK, T_ATK, T_STRIK
     0, 14, 16, 30, 50, 74, 128, 138, 146, 158, 182, 202, 222
 
 
+def _cols(n):
+    return 4 if n % 4 == 0 else 3 if n % 3 == 0 else n
+
+
 def wave(f, period, phase=0.0):
     return math.sin(2 * math.pi * (f / period + phase))
 
@@ -323,7 +327,7 @@ def animate(rig, size):
 
 
 TYPE_FX = {
-    'Grass': ('#5fcf4a', 'leaf'), 'Fire': ('#ff7a1a', 'orb'), 'Water': ('#4aa8ff', 'bubble'),
+    'Grass': ('#5fcf4a', 'leaf'), 'Fire': ('#ff5a00', 'orb'), 'Water': ('#4aa8ff', 'bubble'),
     'Ice': ('#9ff0ff', 'shard'), 'Flying': ('#ffffff', 'ring'), 'Normal': ('#ffffff', 'ring'),
 }
 
@@ -332,34 +336,38 @@ def effects(rig, size, walk_dist):
     """Projectiles (cast) or an impact burst (bite/slam/peck) at the strike."""
     K = Keys()
     color, kind = TYPE_FX.get(rig.type, TYPE_FX['Normal'])
-    glow = lib.mat('fx_' + kind, color, 0.2, emit=6 if kind in ('orb', 'shard') else 1.5,
+    glow = lib.mat('fx_' + kind, color, 0.2, emit=2.5 if kind in ('orb', 'shard') else 1.2,
                    alpha=0.85 if kind == 'bubble' else 1.0, transmission=0.6 if kind == 'bubble' else 0)
     ox, oy, oz = rig.attack_origin
     start = Vector((walk_dist + ox, oy - 0.45 * size, oz))
-    end = Vector((walk_dist + 0.2 * size, -3.2 * size, 0.5 * size))
+    end = Vector((walk_dist + 2.6 * size, -1.8 * size, 0.45 * size))
     n = 6 if rig.attack == 'cast' else 1
     for i in range(n):
         f0 = T_STRIKE - 1 + i * 2
+        o = lib.pivot(f'fxp{i}')
         if kind == 'leaf':
-            o = lib.sphere(f'fx{i}', (0, 0, 0), (0.09 * size, 0.03 * size, 0.05 * size), glow)
+            lib.sphere(f'fx{i}', (0, 0, 0), (0.09 * size, 0.03 * size, 0.05 * size), glow, o)
         elif kind == 'shard':
-            o = lib.cone(f'fx{i}', (0, 0, 0), 0.05 * size, 0.0, 0.25 * size, glow, rot=(math.pi / 2, 0, 0), seg=6)
+            lib.cone(f'fx{i}', (0, 0, 0), 0.05 * size, 0.0, 0.25 * size, glow, o, rot=(math.pi / 2, 0, 0), seg=6)
         elif kind == 'ring':
-            o = lib.torus(f'fx{i}', (0, 0, 0), 0.12 * size, 0.02 * size, glow, rot=(math.pi / 2, 0, 0))
+            lib.torus(f'fx{i}', (0, 0, 0), 0.12 * size, 0.02 * size, glow, o, rot=(math.pi / 2, 0, 0))
+        elif kind == 'orb':
+            lib.sphere(f'fx{i}c', (0, 0, 0), 0.04 * size, lib.mat('fx_core', '#fff0a0', 0.2, emit=5), o)
+            lib.sphere(f'fx{i}', (0, 0, 0), 0.07 * size, lib.mat('fx_shell', '#ff3c00', 0.3, emit=2.0, alpha=0.7), o)
         else:
-            o = lib.sphere(f'fx{i}', (0, 0, 0), 0.1 * size, glow)
+            lib.sphere(f'fx{i}', (0, 0, 0), 0.08 * size, glow, o)
         if rig.attack == 'cast':
             jitter = Vector(((i % 3 - 1) * 0.12 * size, 0, ((i * 7) % 3 - 1) * 0.1 * size))
             K.key(o, 0, loc=start, scale=0.001, absolute=True)
             K.key(o, f0, loc=start, scale=0.001, absolute=True)
             K.key(o, f0 + 1, loc=start, scale=1.0, rot=(0, 0, 0), absolute=True)
-            K.key(o, f0 + 12, loc=end + jitter, scale=1.6 if kind in ('orb', 'ring') else 1.0, rot=(0, i * 2.0, 6.0), absolute=True)
+            K.key(o, f0 + 12, loc=end + jitter, scale=1.3 if kind in ('orb', 'ring') else 1.0, rot=(0, i * 2.0, 6.0), absolute=True)
             K.key(o, f0 + 14, loc=end + jitter, scale=0.001, absolute=True)
         else:
             hit = Vector((walk_dist + ox, oy - 0.9 * size, oz))
             K.key(o, 0, loc=hit, scale=0.001, absolute=True)
             K.key(o, T_STRIKE - 1, loc=hit, scale=0.001, absolute=True)
-            K.key(o, T_STRIKE + 3, loc=hit, scale=3.0, absolute=True)
+            K.key(o, T_STRIKE + 3, loc=hit, scale=2.2, absolute=True)
             K.key(o, T_STRIKE + 9, loc=hit, scale=0.001, absolute=True)
     # flash of light at the strike
     d = bpy.data.lights.new('fx_light', 'POINT')
@@ -376,23 +384,30 @@ def sendout_ball(size):
     """Star Ball arcs in, pops open with a white flash."""
     K = Keys()
     ball = lib.pivot('ball')
-    top = lib.sphere('ball_top', (0, 0, 0), 0.12 * size, lib.mat('ball_top', '#f0c020', 0.3, coat=1), ball)
-    bot = lib.sphere('ball_bot', (0, 0, -0.005), 0.119 * size, lib.mat('ball_bot', '#f4f4f4', 0.3, coat=1), ball)
-    lib.torus('ball_band', (0, 0, 0), 0.12 * size, 0.012 * size, lib.mat('ball_band', '#202028', 0.4), ball)
-    for o, z in ((top, 1), (bot, -1)):   # cut each sphere in half with a boolean-free trick: squash
-        o.scale = (0.12 * size, 0.12 * size, 0.07 * size)
-        o.location = (0, 0, z * 0.05 * size)
-    p0 = Vector((-1.2 * size, -4.0 * size, 1.4 * size))
-    p1 = Vector((0, -0.6 * size, 0.6 * size))
+    r = 0.12 * size
+    top = lib.pivot('ball_top_p', (0, r * 0.9, 0), ball)          # hinge at the back of the ball
+    bot = lib.pivot('ball_bot_p', (0, 0, 0), ball)
+    for piv, up, col, nm in ((top, True, '#f0c020', 'ball_top'), (bot, False, '#f4f4f4', 'ball_bot')):
+        h = lib.sphere(nm, (0, -r * 0.9 if up else 0, 0), r, lib.mat(nm, col, 0.3, coat=1), piv)
+        import bmesh as _bm
+        bm = _bm.new(); bm.from_mesh(h.data)
+        _bm.ops.bisect_plane(bm, geom=bm.verts[:] + bm.edges[:] + bm.faces[:], plane_co=(0, 0, 0),
+                             plane_no=(0, 0, 1), clear_inner=up, clear_outer=not up)
+        bm.to_mesh(h.data); bm.free()
+        h.modifiers.new('solid', 'SOLIDIFY').thickness = 0.06
+    lib.torus('ball_band', (0, 0, 0), r, 0.1 * r, lib.mat('ball_band', '#202028', 0.4), bot)
+    lib.cylinder('ball_button', (0, -r, 0), 0.28 * r, 0.12 * r, lib.mat('ball_button', '#ffffff', 0.2), bot, rot=(math.pi / 2, 0, 0))
+    p0 = Vector((-2.2 * size, -1.6 * size, 0.3 * size))
+    p1 = Vector((0, -0.25 * size, 0.55 * size))
     for f in range(0, T_OPEN + 1, 2):
         t = f / T_OPEN
         pos = p0.lerp(p1, t) + Vector((0, 0, math.sin(math.pi * t) * 1.0 * size))
         K.key(ball, f, loc=pos, rot=(f * 0.6, 0, f * 0.3), scale=1.0, absolute=True)
-    K.key(top, T_OPEN, loc=(0, 0, 0)); K.key(top, T_OPEN + 4, loc=(0, 0, 0.12 * size), rot=(math.radians(-70), 0, 0))
-    K.key(ball, T_OPEN + 6, scale=1.0, absolute=True); K.key(ball, T_OPEN + 10, scale=0.001, absolute=True)
-    flash = lib.sphere('flash', (0, 0, 0.5 * size), 1.0, lib.mat('flash', '#ffffff', 0.5, emit=8, alpha=0.6))
+    K.key(top, T_OPEN, rot=(0, 0, 0)); K.key(top, T_OPEN + 4, rot=(math.radians(-100), 0, 0))
+    K.key(ball, T_OPEN + 2, scale=1.0, absolute=True); K.key(ball, T_OPEN + 5, scale=0.001, absolute=True)
+    flash = lib.sphere('flash', (0, -0.1 * size, 0.5 * size), 1.0, lib.mat('flash', '#ffffff', 0.5, emit=4, alpha=0.5))
     K.key(flash, 0, scale=0.001); K.key(flash, T_OPEN, scale=0.001)
-    K.key(flash, T_OPEN + 4, scale=1.1 * size); K.key(flash, T_OPEN + 12, scale=0.001)
+    K.key(flash, T_OPEN + 3, scale=0.3 * size); K.key(flash, T_OPEN + 8, scale=0.001)
     d = bpy.data.lights.new('flash_light', 'POINT')
     lo = bpy.data.objects.new('flash_light', d)
     bpy.context.scene.collection.objects.link(lo)
@@ -422,7 +437,7 @@ def render_video(key, start=None, end=None):
     sc.frame_set(0)
     # frame for the whole move: creature plus walk distance
     wide_hi = hi.copy()
-    camera(lo, wide_hi, -28, 13, lens=40, pad=1.9, target=(lo + hi) / 2, parent=track)
+    camera(lo, wide_hi, -28, 12, lens=40, pad=1.4, target=(lo + hi) / 2, parent=track)
     sc.render.image_settings.file_format = 'FFMPEG'
     sc.render.ffmpeg.format = 'MPEG4'
     sc.render.ffmpeg.codec = 'H264'
@@ -444,6 +459,25 @@ if __name__ == '__main__':
         render_preview(key)
     elif mode == 'tpose':
         render_tpose(key)
+    elif mode == 'frames':
+        # spot-check the animation: render chosen frames as a contact sheet
+        rig = load_model(key)
+        lo, hi, size = stage(rig, 'preview')
+        track = animate(rig, size)
+        sc = bpy.context.scene
+        sc.render.resolution_x, sc.render.resolution_y = 427, 240
+        sc.frame_set(0)
+        camera(lo, hi, -28, 12, lens=40, pad=1.4, target=(lo + hi) / 2, parent=track)
+        paths = []
+        for f in [int(a) for a in args[2:]]:
+            sc.frame_set(f)
+            sc.render.filepath = os.path.join(OUT, f'_frame_{key}_{f:03d}.png')
+            bpy.ops.render.render(write_still=True)
+            paths.append(sc.render.filepath)
+        os.system('ffmpeg -loglevel error -y ' + ' '.join(f'-i {p}' for p in paths) +
+                  f' -filter_complex "xstack=inputs={len(paths)}:grid={_cols(len(paths))}x{len(paths) // _cols(len(paths))}" {OUT}/_frames_{key}.png')
+        for p in paths:
+            os.remove(p)
     elif mode == 'video':
         rng = (int(args[2]), int(args[3])) if len(args) > 3 else (None, None)
         render_video(key, *rng)

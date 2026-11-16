@@ -33,7 +33,9 @@ def load_model(key):
     spec = importlib.util.spec_from_file_location(key, os.path.join(HERE, 'models', key + '.py'))
     mod = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(mod)
-    return mod.build(lib)
+    rig = mod.build(lib)
+    rig._module = mod
+    return rig
 
 
 def descendants(obj):
@@ -131,7 +133,9 @@ def stage(rig, quality):
 def camera(lo, hi, yaw_deg, pitch_deg=12, lens=50, pad=1.35, target=None, parent=None):
     center = (lo + hi) / 2 if target is None else target
     size = max(hi.x - lo.x, hi.y - lo.y, hi.z - lo.z)
-    fov = 2 * math.atan(18 / lens)
+    r = bpy.context.scene.render
+    half_h = 18 * min(1.0, r.resolution_y / r.resolution_x)   # fit the shorter side of the frame
+    fov = 2 * math.atan(half_h / lens)
     dist = size * pad / (2 * math.tan(fov / 2)) + max(hi.y - lo.y, hi.x - lo.x) / 2
     yaw, pitch = math.radians(yaw_deg), math.radians(pitch_deg)
     off = Vector((math.sin(yaw) * math.cos(pitch), -math.cos(yaw) * math.cos(pitch), math.sin(pitch))) * dist
@@ -227,7 +231,111 @@ def wave(f, period, phase=0.0):
     return math.sin(2 * math.pi * (f / period + phase))
 
 
+class Anim:
+    """Handed to a model's animate(A). See MODELING_BRIEF.md, section "Animation".
+
+    Fixed phases (frames at 24 fps). The framework throws the Star Ball and pops it open with a
+    flash by frame 16; everything after that belongs to the model.
+        OUT 16       the Pokemon starts to appear (it must be invisible before this, e.g. root scale 0)
+        IDLE 48      settled, breathing / idling
+        WALK 72      turn and move across (walk, hop, slither, glide, float...). The camera follows the root.
+        WALK_END 138 must be facing the camera (-Y) again by ATTACK
+        ATTACK 140   wind-up, strike, effect hits the opponent (A.opponent) by about 165
+        HIT 186      gets hit (the framework adds a red flash at the Pokemon); react
+        RECOVER 206  recover and finish with an in-character idle or victory pose
+        END 230
+    """
+    T = dict(OPEN=14, OUT=16, IDLE=48, WALK=72, WALK_END=138, ATTACK=140, HIT=186, RECOVER=206, END=230)
+
+    def __init__(self, rig, size):
+        self.rig, self.size, self.lib = rig, size, lib
+        self._k = Keys()
+
+    # keyframes (offsets from each object's rest pose unless absolute=True)
+    def key(self, obj, f, loc=None, rot=None, scale=None, absolute=False):
+        self._k.key(obj, f, loc, rot, scale, absolute)
+
+    @staticmethod
+    def wave(f, period, phase=0.0):
+        return wave(f, period, phase)
+
+    @staticmethod
+    def ease(t):
+        t = max(0.0, min(1.0, t))
+        return t * t * (3 - 2 * t)
+
+    @staticmethod
+    def frames(f0, f1, step=1):
+        return range(int(f0), int(f1) + 1, step)
+
+    def opponent(self, from_xyz):
+        """Where the opposing Pokemon would stand, seen from a Pokemon at from_xyz (world)."""
+        x, y, _ = from_xyz
+        return Vector((x + 2.6 * self.size, y - 1.8 * self.size, 0.45 * self.size))
+
+    def world(self, obj, f, local=(0, 0, 0)):
+        """World position of a point on obj at frame f (after the keys set so far)."""
+        sc = bpy.context.scene
+        sc.frame_set(int(f))
+        return obj.matrix_world @ Vector(local)
+
+    def emission(self, material, f, strength):
+        b = material.node_tree.nodes['Principled BSDF'].inputs['Emission Strength']
+        b.default_value = strength
+        b.keyframe_insert('default_value', frame=f)
+
+    def alpha(self, material, f, value):
+        material.blend_method = 'BLEND'
+        b = material.node_tree.nodes['Principled BSDF'].inputs['Alpha']
+        b.default_value = value
+        b.keyframe_insert('default_value', frame=f)
+
+    def light(self, name, color, loc, keys, kind='POINT', radius=0.1, parent=None):
+        """A light whose energy follows keys = [(frame, watts), ...]."""
+        d = bpy.data.lights.new(name, kind)
+        d.color = lib._rgb(color)
+        d.shadow_soft_size = radius
+        o = bpy.data.objects.new(name, d)
+        bpy.context.scene.collection.objects.link(o)
+        o.location = loc
+        if parent is not None:
+            o.parent = parent
+        for f, e in keys:
+            d.energy = e
+            d.keyframe_insert('energy', frame=f)
+        return o
+
+    @staticmethod
+    def interp(obj, kind='LINEAR'):
+        """Set the interpolation of every key on obj (LINEAR, BEZIER, CONSTANT)."""
+        if obj.animation_data and obj.animation_data.action:
+            for fc in obj.animation_data.action.fcurves:
+                for kp in fc.keyframe_points:
+                    kp.interpolation = kind
+
+
+def animate_custom(rig, size):
+    sc = bpy.context.scene
+    sc.frame_start, sc.frame_end = 0, Anim.T['END']
+    sc.render.fps = FPS
+    sendout_ball(size)
+    A = Anim(rig, size)
+    rig._module.animate(A)
+    # the camera follows the root's x
+    track = lib.pivot('cam_track')
+    K = Keys()
+    for f in range(0, Anim.T['END'] + 1, 3):
+        sc.frame_set(f)
+        K.key(track, f, loc=(rig.root.matrix_world.translation.x, 0, 0), absolute=True)
+    sc.frame_set(Anim.T['HIT'])
+    hit_flash(size, rig.root.matrix_world.translation.x, Anim.T['HIT'])
+    sc.frame_set(0)
+    return track
+
+
 def animate(rig, size):
+    if hasattr(rig._module, 'animate'):
+        return animate_custom(rig, size)
     K = Keys()
     sc = bpy.context.scene
     sc.frame_start, sc.frame_end = 0, T_END
@@ -421,13 +529,14 @@ def sendout_ball(size):
         d.keyframe_insert('energy', frame=f)
 
 
-def hit_flash(size, walk_dist):
+def hit_flash(size, walk_dist, t_hit=None):
+    t_hit = T_HIT if t_hit is None else t_hit
     d = bpy.data.lights.new('hit_light', 'POINT')
     d.color = lib._rgb('#ff4040')
     lo = bpy.data.objects.new('hit_light', d)
     bpy.context.scene.collection.objects.link(lo)
     lo.location = (walk_dist, -1.2 * size, 0.8 * size)
-    for f, e in [(0, 0), (T_HIT, 0), (T_HIT + 1, 900 * size * size), (T_HIT + 4, 0), (T_HIT + 6, 600 * size * size), (T_HIT + 9, 0)]:
+    for f, e in [(0, 0), (t_hit, 0), (t_hit + 1, 900 * size * size), (t_hit + 4, 0), (t_hit + 6, 600 * size * size), (t_hit + 9, 0)]:
         d.energy = e
         d.keyframe_insert('energy', frame=f)
 

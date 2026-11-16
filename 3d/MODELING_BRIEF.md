@@ -70,3 +70,54 @@ The keys match `js/data.js`.
 | `fiercebird` | Ice/Flying, 550 cm. A huge, fully snowy eagle. Big spiky pale-blue wings with ice crystals on them, a white body, a necklace of ice beads and a red scarf with one end hanging down. A hooked yellow beak, a snowflake-patterned eye under an angry brow, a frosty crest and yellow talons. `fly`, `cast` (its signature move is Brittle Blast, a freezing dive). In the T-pose its wings are fully spread. |
 
 The 2D pixel art in `js/sprites.js` is the agreed look for all of these, so match it. Where the pixel art is vague about a detail, use your judgment to make it look like a real Pokemon.
+
+---
+
+# Round 2: bring every Pokemon up to Slimean, and give each one its own animation
+
+The team's feedback on round 1: **Slimean is the best-looking Pokemon by far**, and the walk, attack and send-out animations are generic and "meh" because every Pokemon shared one animation routine. This round fixes both, for every single Pokemon. Each Pokemon gets its own animation, not just one per evolution line.
+
+## 1. Bring the model up to Slimean's level
+
+Open `models/slimean.py` and `renders/preview_slimean.png` and work out why it looks good:
+- One strong, simple, appealing shape. Nothing reads as primitives glued together.
+- Rich materials: glossy coat, subsurface, a lighter inner layer, a highlight, little bubbles.
+- A face that is cute and expressive, sized and placed for charm.
+- Small details that tell a story: the puddle and drips at its base.
+
+Bring each of your Pokemon to that standard. Rework or rebuild the model where needed, and don't just tweak it. Watch for the round 1 weak spots: shapes that look like separate primitives, flat single-color materials, small or dead-looking eyes, stiff stick limbs, parts floating or clipping. Use `extrude_shape`, `from_verts` and `tube` with varying radii to get organic forms, and give every material some life (coat, sss, emission, a second tone).
+
+## 2. Write its own animation: `def animate(A)` in the model file
+
+If a model file defines `animate(A)`, the renderer uses it instead of the generic routine. `A` is the `Anim` class in `render.py` (read it). It has:
+- `A.rig`, `A.size` (the Pokemon's bounding size in meters, so scale motion by it), `A.lib`, and `A.T`, the phase frames.
+- `A.key(obj, frame, loc=, rot=, scale=, absolute=False)` keys an object, as an offset from its rest pose unless `absolute=True`.
+- `A.wave(f, period, phase)`, `A.ease(t)` and `A.frames(f0, f1, step)`.
+- `A.world(obj, f, local)` gives the world position of a point at frame f, using the keys set so far. Key the root's path first, then use this to place effects.
+- `A.opponent(xyz)` is where the opposing Pokemon stands. Aim attacks there. It is to the front-right, away from the camera.
+- `A.emission(material, f, strength)` and `A.alpha(material, f, value)` key material values for glows, fades and flashes.
+- `A.light(name, color, loc, [(f, watts), ...])` adds a keyed point light for glows and impacts.
+- `A.interp(obj, 'LINEAR' | 'BEZIER' | 'CONSTANT')`.
+
+The framework only does two things. It throws the Star Ball and pops it open with a flash (frames 0-16), and it adds a red flash at frame 186. The camera follows the root's X. Everything else is yours, and the timeline is:
+
+| phase | frames | what should happen |
+| --- | --- | --- |
+| send-out | 16-48 | The Pokemon must be invisible before 16 (for example root scale 0.001 until 16). Then a unique entrance that fits the character, ending in its cry. Some examples: Slimean splats out as a puddle and pulls itself up into a ball; Flamber ignites from a single ember; Fiercebird bursts out of a snow flurry with its wings spread. |
+| idle | 48-72 | Its own idle: breathing, blinking (scale the eye pivot's Z), flames flickering, a tail swish, a look around. |
+| walk | 72-138 | Turn and travel across (+X), about 1-2 x `A.size`, in a way only this Pokemon moves: a waddle, a slither with a wave running down the body, a bouncing hop with squash and stretch, a stalking croc crawl, a strutting run, a float with trailing embers. Turn back to face the camera (-Y) by 138. |
+| attack | 140-186 | Anticipation, then the strike, then follow-through. Use a move that fits it: its signature move if it has one (Bog Chomp, Flames of Health, Slime Split, Brittle Blast) or a move from its learnset. Build the effect yourself from `lib` meshes and lights: leaf storms, fire breath, bubble streams, ice shards, a body slam with a shockwave. It should land on `A.opponent(...)` around frame 160-170. |
+| hit | 186-206 | Take a hit in character: squash and wobble, stagger back, flames sputtering, feathers puffing out. |
+| recover | 206-230 | Shake it off and end on a confident in-character pose or loop. |
+
+Animation craft: use anticipation, overshoot and settle, squash and stretch, follow-through on tails, ears, flames and scarves, offset timing between parts, and ease in and out. Avoid identical sine waves on everything. Keys every 1-2 frames are fine where the motion is complex.
+
+Check animation with the frames contact sheet (about 20-40 seconds a run):
+
+```
+cd 3d && /opt/blender-dl/blender-4.2.23-linux-x64/blender -b --factory-startup -P render.py -- <key> frames 18 26 40 60 90 110 145 152 160 168 190 220
+```
+
+It writes `renders/_frames_<key>.png`. Pick frames that show the key poses (the frame count should be a multiple of 3 or 4). `models/_test.py` has a tiny example `animate`.
+
+Budget per Pokemon: about 3 previews and 3-4 frame sheets. Don't render videos; I render all the final videos.

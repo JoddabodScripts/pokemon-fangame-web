@@ -15,3 +15,25 @@ def build(lib):
         rig.legs.append((leg, i * 0.5))
     rig.attack_origin = (0, -0.4, 0.9)
     return rig
+
+
+def animate(A):
+    """Example of a custom animation (see MODELING_BRIEF.md)."""
+    import math
+    r, T, s = A.rig, A.T, A.size
+    A.key(r.root, 0, scale=0.001); A.key(r.root, T['OUT'], scale=0.001)
+    A.key(r.root, T['OUT'] + 8, scale=1.1); A.key(r.root, T['OUT'] + 12, scale=1.0)
+    A.key(r.root, T['WALK'], loc=(0, 0, 0), rot=(0, 0, 0))
+    A.key(r.root, T['WALK'] + 6, rot=(0, 0, math.pi / 2))
+    A.key(r.root, T['WALK_END'] - 6, loc=(1.5 * s, 0, 0), rot=(0, 0, math.pi / 2))
+    A.key(r.root, T['WALK_END'], rot=(0, 0, 0))
+    for f in A.frames(T['WALK'], T['WALK_END'], 2):
+        for leg, ph in r.legs:
+            A.key(leg, f, rot=(A.wave(f, 12, ph) * 0.5, 0, 0))
+    here = A.world(r.root, T['ATTACK'], (0, -0.4, 0.9))
+    ball = A.lib.pivot('t_fx')
+    A.lib.sphere('t_fxm', (0, 0, 0), 0.1 * s, A.lib.mat('t_fx', '#ff6a00', emit=3), ball)
+    A.key(ball, 0, loc=here, scale=0.001, absolute=True); A.key(ball, T['ATTACK'] + 10, loc=here, scale=0.001, absolute=True)
+    A.key(ball, T['ATTACK'] + 11, loc=here, scale=1, absolute=True)
+    A.key(ball, T['ATTACK'] + 24, loc=A.opponent(here), scale=1.5, absolute=True)
+    A.key(ball, T['ATTACK'] + 26, loc=A.opponent(here), scale=0.001, absolute=True)

@@ -63,9 +63,10 @@ def stage(rig, quality):
     sc = bpy.context.scene
     sc.render.engine = 'CYCLES'
     sc.cycles.device = 'CPU'
-    sc.cycles.samples = {'preview': 10, 'video': 14, 'tpose': 64}[quality]
+    sc.cycles.samples = {'preview': 10, 'video': 10, 'tpose': 64}[quality]
+    sc.cycles.adaptive_threshold = 0.05 if quality != 'tpose' else 0.01
     sc.cycles.use_denoising = True
-    sc.cycles.max_bounces = 4
+    sc.cycles.max_bounces = 4 if quality == 'tpose' else 3
     sc.render.use_persistent_data = True
     sc.view_settings.view_transform = 'AgX'
     sc.view_settings.look = 'AgX - Medium High Contrast'

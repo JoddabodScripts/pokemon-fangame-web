@@ -63,10 +63,14 @@ def stage(rig, quality):
     sc = bpy.context.scene
     sc.render.engine = 'CYCLES'
     sc.cycles.device = 'CPU'
-    sc.cycles.samples = {'preview': 10, 'video': 10, 'tpose': 64}[quality]
+    sc.cycles.samples = {'preview': 10, 'video': 8, 'tpose': 64}[quality]
     sc.cycles.adaptive_threshold = 0.05 if quality != 'tpose' else 0.01
     sc.cycles.use_denoising = True
-    sc.cycles.max_bounces = 4 if quality == 'tpose' else 3
+    sc.cycles.max_bounces = 4 if quality == 'tpose' else 2
+    sc.cycles.caustics_reflective = sc.cycles.caustics_refractive = False
+    if quality == 'video':
+        sc.render.use_simplify = True
+        sc.render.simplify_subdivision_render = 1
     sc.render.use_persistent_data = True
     sc.view_settings.view_transform = 'AgX'
     sc.view_settings.look = 'AgX - Punchy'
@@ -433,7 +437,7 @@ def render_video(key, start=None, end=None):
     lo, hi, size = stage(rig, 'video')
     track = animate(rig, size)
     sc = bpy.context.scene
-    sc.render.resolution_x, sc.render.resolution_y = 854, 480
+    sc.render.resolution_x, sc.render.resolution_y = 640, 360
     sc.frame_set(0)
     # frame for the whole move: creature plus walk distance
     wide_hi = hi.copy()

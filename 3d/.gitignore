@@ -1,0 +1,3 @@
+renders/_*
+renders/preview_*
+__pycache__/

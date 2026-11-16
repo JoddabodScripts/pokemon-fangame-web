@@ -1,3 +1,4 @@
 renders/_*
 renders/preview_*
 __pycache__/
+renders/batch.log

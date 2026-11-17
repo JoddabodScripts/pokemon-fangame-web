@@ -231,3 +231,132 @@ def build(lib):
 
     rig.attack_origin = (0, -0.5, 1.3)
     return rig
+
+
+def animate(A):
+    """Blazian: rises out of a pillar of flame as its mane bursts alight, strides across leaving
+    burning footprints, then Flames of Health: charges a sun orb between its fireball hands, blasts a
+    stream of fire, and soaks up the heat as golden healing sparks spiral around it."""
+    import bpy
+    import anim_kit as K
+    from anim_kit import E, spring, decay
+    from mathutils import Vector
+    r, T, s, lib = A.rig, A.T, A.size, A.lib
+    root, B, H = r.root, r.body, r.head
+    mane = bpy.data.objects['blz_mane']
+    arms = [(a, (-1 if a.name.endswith('L') else 1)) for a, _ in r.arms]
+    legs = [l for l, _ in r.legs]
+    eyes = [bpy.data.objects['blz_eye-1'], bpy.data.objects['blz_eye1']]
+    sun = lib.mat('blz_sun', '#ffcc28')
+    face = lib.mat('blz_face', '#ffdc8c')
+    pi, R = math.pi, math.radians
+    win = K.win
+    D = 1.5 * s
+    aim = 0.6
+    stride = D / 3.0
+
+    def walk_x(f):
+        return D * E(f, 80, 128)
+
+    A.key(root, 0, scale=0.001)
+    A.key(root, T['OUT'] - 1, scale=0.001)
+    for f in range(T['OUT'], T['END'] + 1):
+        app = spring((f - 20) / 9, 4, 8)
+        x = walk_x(f)
+        yaw = (pi / 2) * win(f, 72, 79, 129, 137) + aim * win(f, 141, 147, 178, 185)
+        kb = win(f, 186, 190, 200, 212)
+        A.key(root, f, loc=(x - 0.15 * s * kb * math.sin(aim), 0.3 * s * kb, 0.02 * s * (1 - E(f, 20, 30))),
+              rot=(0, 0, yaw), scale=max(0.001, app))
+
+        W = win(f, 78, 84, 124, 130)
+        th = 2 * pi * walk_x(f) / stride
+        cry = win(f, 37, 40, 45, 48)
+        idle = math.sin(2 * pi * f / 36)
+        charge = win(f, 141, 147, 152, 154)
+        thrust = win(f, 153, 156, 164, 170)
+        heal = win(f, 166, 170, 180, 185)
+        hitw = decay(f, 186, 6, 1.0)
+        stag = win(f, 186, 189, 198, 206)
+        victory = win(f, 211, 216, 230, 240)
+
+        # body: bounce in the stride, lean into the blast, stagger
+        A.key(B, f, loc=(0.025 * s * idle * (1 - W), 0, 0.03 * s * abs(math.sin(th)) * W + 0.03 * s * cry - 0.04 * s * charge),
+              rot=(0.08 * W - 0.12 * cry + 0.1 * charge - 0.18 * thrust + 0.22 * stag - 0.1 * victory,
+                   0.1 * hitw, 0.06 * math.sin(th) * W + 0.03 * idle * (1 - W)))
+        # legs: stride and stance
+        for i, lp in enumerate(legs):
+            p_ = th + pi * i
+            A.key(lp, f, rot=(-0.55 * math.sin(p_) * W + (0.2 if i else -0.2) * thrust + 0.25 * stag * (1 if i else -1), 0,
+                              (0.08 if i else -0.08) * (cry + victory)))
+        # arms: swing, cheer, gather, thrust (rest pose holds them raised at 118 deg)
+        for k, (a, sd) in enumerate(arms):
+            swing = 0.45 * math.sin(th + pi * k) * W
+            cheer = -sd * R(55) * (cry + victory)
+            gather_y = sd * R(118) * (charge + thrust)
+            gather_x = -R(95) * (charge + thrust) + R(15) * charge
+            inward = -sd * R(25) * charge
+            flail = 0.5 * hitw * math.sin(k * 2 + 1)
+            A.key(a, f, rot=(swing + gather_x + flail, cheer + gather_y + 0.06 * idle * (1 - W), inward))
+        # head
+        A.key(H, f, rot=(-0.3 * cry - 0.12 * charge + 0.1 * thrust + 0.25 * stag - 0.22 * victory + 0.02 * idle,
+                         0, 0.12 * math.sin(2 * pi * f / 70) * (1 - W)))
+        # mane: bursts alight, flares when charging, sputters when hit
+        burst = spring((f - 27) / 7, 4, 9)
+        sput = 1 - 0.35 * win(f, 186, 188, 200, 210) + 0.08 * math.sin(f * 1.7) * win(f, 186, 190, 204, 210)
+        reflare = 0.35 * win(f, 210, 214, 216, 222)
+        A.key(mane, f, rot=(0, 0.04 * math.sin(f * 0.3), 0),
+              scale=max(0.001, burst * sput * (1 + 0.06 * idle + 0.2 * charge + 0.15 * cry + reflare + 0.1 * heal)))
+        blink = max(win(f, x0, x0 + 1, x0 + 2, x0 + 4) for x0 in (55, 66, 100, 194))
+        for e in eyes:
+            A.key(e, f, scale=(1, 1, 1 - max(0.9 * blink, 0.4 * charge)))
+
+    for f, v in [(0, 0.9), (140, 0.9), (150, 6), (156, 3), (166, 3), (172, 8), (184, 0.9), (187, 0.2), (200, 0.6), (214, 4), (224, 0.9)]:
+        A.emission(sun, f, v)
+    for f, v in [(0, 0.22), (166, 0.22), (172, 1.5), (184, 0.22)]:
+        A.emission(face, f, v)
+
+    fire_r = lib.mat('blz_fx_red', '#ff3c00', 0.3, emit=3.0)
+    fire_y = lib.mat('blz_fx_ye', '#ffb020', 0.3, emit=4.0)
+    core = lib.mat('blz_fx_core', '#fff0a0', 0.2, emit=6.0)
+    # ---------------------------------------------------- send-out: fire ring and flame pillar
+    K.ring(A, 'blz_fx_ring', (0, 0, 0.03), 16, dur=12, r0=0.1, r1=0.9, thick=0.06, mat=fire_r)
+    pil = lib.pivot('blz_fx_pillar')
+    for i in range(5):
+        lib.cone(f'blz_fx_pil{i}', (0.08 * math.sin(i * 2.1), 0.08 * math.cos(i * 2.1), 0.5), 0.28 - 0.03 * i, 0.0, 1.0 + 0.15 * i,
+                 fire_r if i % 2 else fire_y, pil, seg=12)
+    for f, sz, w in [(0, 0.001, 0.001), (16, 0.001, 0.001), (19, 1.2, 1.0), (24, 1.6, 0.9), (30, 0.9, 0.6), (35, 0.001, 0.001)]:
+        A.key(pil, f, scale=(w * s * 0.9, w * s * 0.9, sz * s * 0.9) if sz > 0.001 else 0.001, absolute=True)
+    A.light('blz_fx_pillight', '#ff8030', (0, -0.5 * s, 0.9 * s), [(0, 0), (16, 0), (20, 900 * s * s), (34, 0)])
+    K.burst(A, 'blz_fx_cryembers', (0, 0, 1.4 * s), 38, n=16, dur=16, speed=0.9, up=0.9, gravity=0.6, size=0.025, mat=fire_y, seed=1)
+
+    # ---------------------------------------------------- burning footprints
+    for n, f0 in enumerate(range(86, 128, 8)):
+        p = A.world(root, f0)
+        fl = lib.pivot(f'blz_fx_step{n}')
+        lib.cone(f'blz_fx_stepm{n}', (0, 0, 0.08), 0.06, 0.0, 0.16, fire_r if n % 2 else fire_y, fl, seg=8)
+        sd = 0.1 * s * (1 if n % 2 else -1)
+        for f, sc in [(0, 0.001), (f0 - 1, 0.001), (f0 + 1, 1.2 * s), (f0 + 10, 0.8 * s), (f0 + 18, 0.001)]:
+            A.key(fl, f, loc=(p.x, p.y + sd, 0.0), scale=sc, absolute=True)
+
+    # ---------------------------------------------------- Flames of Health
+    chest = A.world(B, 152, (0, -0.45, 0.05))
+    orb = lib.pivot('blz_fx_orb')
+    lib.sphere('blz_fx_orbc', (0, 0, 0), 0.6, core, orb, seg=20)
+    lib.sphere('blz_fx_orbs', (0, 0, 0), 1.0, lib.mat('blz_fx_orbshell', '#ff7a1a', 0.3, emit=2.5, alpha=0.6), orb, seg=20)
+    for f, sc in [(0, 0.001), (143, 0.001), (146, 0.05), (152, 0.16), (154, 0.2), (156, 0.001)]:
+        A.key(orb, f, loc=chest, scale=sc * s if sc > 0.001 else 0.001, absolute=True)
+    A.light('blz_fx_orblight', '#ffa040', chest, [(0, 0), (143, 0), (153, 700 * s * s), (157, 0)])
+    tgt = A.opponent(chest)
+    for j in range(7):
+        K.projectile(A, f'blz_fx_blast{j}', chest + Vector((0, 0, 0.03 * s * (j % 3 - 1))), tgt, 155 + j, flight=8,
+                     mat=fire_y if j % 2 else fire_r, radius=0.07 + 0.01 * (j % 3), trail=2)
+    K.flash_sphere(A, 'blz_fx_muzzle', chest, 155, dur=6, r1=0.25, mat=core)
+    # healing: golden sparks spiral up around Blazian and it glows
+    heal_m = lib.mat('blz_fx_heal', '#ffe66a', 0.3, emit=5.0)
+    here = A.world(root, 168)
+    K.swirl(A, 'blz_fx_heal', (here.x, here.y, 0.05), 166, dur=22, n=18, radius=0.6, height=1.9, turns=1.3, mat=heal_m, size=0.022, inward=True)
+    K.ring(A, 'blz_fx_healring', (here.x, here.y, 0.04), 168, dur=14, r0=0.9, r1=0.2, thick=0.03, mat=heal_m)
+    A.light('blz_fx_heallight', '#ffe080', here + Vector((0, -0.4 * s, 1.0 * s)), [(0, 0), (166, 0), (172, 500 * s * s), (184, 0)])
+    # re-ignite at the end
+    vic = A.world(root, 214) + Vector((0, 0, 1.5 * s))
+    K.burst(A, 'blz_fx_reflare', vic, 213, n=16, dur=16, speed=1.0, up=1.0, gravity=0.5, size=0.025, mat=fire_y, seed=4)

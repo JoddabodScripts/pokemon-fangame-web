@@ -49,6 +49,10 @@ def build(lib):
     glow = lib.mat('slo_glow', '#bfe4ff', 0.2, emit=4.0, emit_color='#bfe4ff')
     gloss = lib.mat('slo_gloss', '#e8f4ff', 0.1, emit=0.6, coat=1.0)
     dark = lib.mat('slo_dark', '#0e1a3a', 0.3)
+    ring3 = lib.mat('slo_ring3', '#9cc8ff', 0.15, sss=0.15, coat=1.0)
+    bub = lib.mat('slo_bubble', '#b8d8ff', 0.1, emit=0.3, coat=1.0)
+    puddle = lib.mat('slo_puddle', '#2458a8', 0.05, sss=0.15, coat=1.0, alpha=0.85)
+    drip = lib.mat('slo_drip', '#3a7ad8', 0.1, sss=0.2, coat=1.0)
 
     CZ, CR = 1.16, 0.52
     rig.body = lib.pivot('slo_bodyp', (0, 0, 0), rig.root)
@@ -76,14 +80,31 @@ def build(lib):
     fd = (0, -1, -0.12)
     patch(lib, 'slo_ringA', C, R, fd, 0.72, 0.72, ring1, rig.body, k=1.006)
     patch(lib, 'slo_ringB', C, R, fd, 0.56, 0.56, ring2, rig.body, k=1.012)
+    patch(lib, 'slo_ringC', C, R, fd, 0.4, 0.4, ring3, rig.body, k=1.016)
+    # bubbles caught inside the slime
+    for i, (dx, dz, br) in enumerate([(-0.55, -0.35, 0.05), (0.62, -0.22, 0.04), (0.45, 0.48, 0.035), (-0.38, 0.55, 0.03),
+                                      (0.7, 0.1, 0.03), (-0.68, 0.12, 0.04), (0.2, -0.7, 0.03)]):
+        lib.sphere(f'slo_bub{i}', on(C, R, (dx, -0.75, dz), 0.985), br, bub, rig.body, seg=12)
+    # slime dripping from underneath
+    for i, (dx, dy, ln) in enumerate([(-0.18, -0.1, 0.22), (0.12, 0.05, 0.3), (0.3, -0.18, 0.16), (-0.32, 0.12, 0.2)]):
+        top = on(C, R, (dx, dy, -1), 0.9)
+        lib.tube(f'slo_drip{i}', [top, (top[0], top[1], top[2] - ln * 0.6), (top[0], top[1], top[2] - ln)],
+                 [0.06, 0.035, 0.012], drip, rig.body, seg=12)
+        lib.sphere(f'slo_dripb{i}', (top[0], top[1], top[2] - ln - 0.02), 0.032, drip, rig.body, seg=12)
+    # puddle on the ground under it (stays put while it floats)
+    lib.sphere('slo_puddle', (0, 0.02, 0.006), (0.62, 0.55, 0.012), puddle, rig.root, seg=40)
+    for i, (x, y, r) in enumerate([(0.68, -0.32, 0.09), (-0.7, 0.25, 0.07), (0.45, 0.5, 0.06)]):
+        lib.sphere(f'slo_pud{i}', (x, y, 0.006), (r, r, 0.012), puddle, rig.root, seg=16)
     gp = lib.pivot('slo_glowp', C, rig.body)
     patch(lib, 'slo_glow', (0, 0, 0), R, (0, -1, -0.52), 0.2, 0.17, glow, gp, k=1.02, rings=4, seg=24)
     rig.extras.append((gp, 'pulse'))
-    patch(lib, 'slo_gloss', C, R, (-0.66, -0.55, 0.56), 0.06, 0.18, gloss, rig.body, k=1.016, rings=3, seg=16)
+    patch(lib, 'slo_gloss', C, R, (-0.66, -0.55, 0.56), 0.07, 0.24, gloss, rig.body, k=1.016, rings=3, seg=16)
+    patch(lib, 'slo_gloss2', C, R, (-0.42, -0.62, 0.72), 0.05, 0.05, gloss, rig.body, k=1.018, rings=3, seg=16)
+    patch(lib, 'slo_gloss3', C, R, (0.62, -0.5, -0.5), 0.04, 0.1, gloss, rig.body, k=1.016, rings=3, seg=16)
 
     # stern face
     for sx, nm in ((-1, 'L'), (1, 'R')):
-        e = lib.eye('slo_eye' + nm, on(C, R, (sx * 0.3, -1, 0.2), 0.99), 0.07, rig.body,
+        e = lib.eye('slo_eye' + nm, on(C, R, (sx * 0.3, -1, 0.2), 0.99), 0.092, rig.body,
                     iris='#1c3470', pupil='#0e1a3a', sclera='#0e1a3a', look=(sx * 0.22, -1, 0.14), iris_frac=0.7)
         e.scale = (1.0, 1, 1.0)
         b0, b1 = on(C, R, (sx * 0.55, -1, 0.5), 1.05), on(C, R, (sx * 0.1, -1, 0.26), 1.06)

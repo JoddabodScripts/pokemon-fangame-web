@@ -187,3 +187,109 @@ def build(lib):
     rig.attack_origin = (0, -0.75, 1.7)
     rig.t_pose = {'fie_wingL': (0, 0, 0), 'fie_wingR': (0, 0, 0)}   # flat in the XZ plane, back-sweep removed
     return rig
+
+
+def animate(A):
+    """Fiercebird: descends out of a blizzard and lands in a burst of snow, screeches with its wings
+    spread, flies across on heavy wingbeats, then Brittle Blast: climbs, folds its wings and dives,
+    and the air freezes on impact into a cluster of ice spikes that shatter."""
+    import bpy
+    import anim_kit as K
+    from anim_kit import E, spring, decay
+    from mathutils import Vector
+    r, T, s, lib = A.rig, A.T, A.size, A.lib
+    root, B, H, J = r.root, r.body, r.head, r.jaw
+    scarf = bpy.data.objects['fie_scarfp']
+    eyes = [bpy.data.objects['fie_eyeL'], bpy.data.objects['fie_eyeR']]
+    pi = math.pi
+    win = K.win
+    D = 1.6 * s
+    aim = 0.75
+    dirv = Vector((math.sin(aim), -math.cos(aim), 0))
+
+    def fly_x(f):
+        return D * E(f, 82, 128)
+
+    A.key(root, 0, scale=0.001)
+    A.key(root, T['OUT'] - 1, scale=0.001)
+    for f in range(T['OUT'], T['END'] + 1):
+        # ------------------------------------------------ root path
+        descend = 1.4 * s * (1 - E(f, 17, 34)) ** 1.5
+        app = spring((f - 17) / 6, 5, 8)
+        fly = win(f, 78, 86, 122, 132)
+        climb = win(f, 141, 151, 152, 153)
+        dive = win(f, 152, 159, 162, 176)
+        x = fly_x(f)
+        z = descend + 0.22 * s * fly + 0.4 * s * climb * (1 - E(f, 152, 159)) + 0.06 * s * math.sin(2 * pi * f / 20) * fly
+        off = dirv * (0.95 * s * dive - 0.12 * s * climb)
+        kb = win(f, 186, 190, 200, 212)
+        off -= dirv * 0.35 * s * kb
+        yaw = (pi / 2) * win(f, 72, 80, 130, 138) + aim * win(f, 141, 149, 178, 186)
+        A.key(root, f, loc=(x + off.x, off.y, z + 0.12 * s * dive * (1 - E(f, 156, 160))), rot=(0, 0, yaw), scale=max(0.001, app))
+
+        # ------------------------------------------------ weights
+        flapping = max(win(f, 16, 18, 32, 36), win(f, 76, 80, 124, 134), win(f, 162, 166, 176, 182))
+        glide = win(f, 98, 102, 110, 114)
+        land = max(win(f, 30, 33, 36, 40), win(f, 124, 128, 132, 136), win(f, 176, 179, 182, 186))
+        cry = win(f, 39, 42, 46, 49)
+        hitw = decay(f, 186, 7, 1.0)
+        victory = win(f, 212, 217, 230, 240)
+        idle = math.sin(2 * pi * f / 34)
+        tuck = win(f, 152, 155, 160, 164)
+        raise_ = climb
+
+        # ------------------------------------------------ body pitch
+        pitch = 0.25 * fly * (1 - glide) + 0.55 * win(f, 152, 155, 159, 162) - 0.2 * land - 0.12 * cry - 0.15 * raise_ + 0.2 * hitw
+        A.key(B, f, loc=(0, 0, 0.012 * s * idle), rot=(pitch, 0.1 * hitw, 0.08 * math.sin(2 * pi * f / 20) * fly),
+              scale=(1 + 0.01 * idle, 1, 1 + 0.015 * idle))
+        # ------------------------------------------------ wings: flap, glide, raise, tuck for the dive, spread
+        for w, sx in r.wings:
+            beat = math.sin(2 * pi * f / 10)
+            up = (-0.85 * beat) * flapping * (1 - glide) - 0.15 * glide
+            hold = -0.75 * (cry + victory) - 0.9 * raise_ - 0.5 * land + 0.35 * win(f, 186, 188, 196, 202)
+            rest_fold = 0.25 * (1 - max(flapping, cry, victory, raise_, land, tuck))
+            A.key(w, f, rot=(0, sx * (up + hold) + sx * rest_fold * 0.5, sx * (0.9 * tuck + 0.3 * rest_fold)))
+        # ------------------------------------------------ legs tuck in flight, reach to land
+        for i, (lg, ph) in enumerate(r.legs):
+            A.key(lg, f, rot=(0.9 * max(fly, tuck) - 0.4 * land + 0.25 * cry, 0, 0))
+        # ------------------------------------------------ tail fans to brake
+        A.key(r.tail[0], f, rot=(-0.4 * land - 0.3 * victory + 0.3 * tuck + 0.08 * idle, 0, 0.15 * math.sin(2 * pi * f / 28)),
+              scale=(1 + 0.4 * (land + victory), 1, 1))
+        # ------------------------------------------------ head: raptor snaps, cry, lock on, recoil
+        snaps = [(52, 0.5), (58, -0.4), (64, 0.2), (196, 0.3)]
+        turn = sum(a * win(f, f0, f0 + 1, f0 + 5, f0 + 6) for f0, a in snaps)
+        A.key(H, f, rot=(-0.45 * cry + 0.35 * raise_ - 0.2 * tuck + 0.3 * hitw - 0.35 * victory, 0, turn))
+        A.key(J, f, rot=(0.7 * cry + 0.5 * win(f, 150, 152, 158, 161) + 0.35 * win(f, 186, 188, 194, 198) + 0.6 * win(f, 220, 223, 227, 230), 0, 0))
+        A.key(scarf, f, rot=(0.6 * max(fly, tuck) + 0.2 * math.sin(f * 0.5) * flapping, 0, 0.25 * math.sin(f * 0.35)))
+        blink = max(win(f, x0, x0 + 1, x0 + 2, x0 + 4) for x0 in (55, 70, 112, 192))
+        for e in eyes:
+            A.key(e, f, scale=(1, 1, 1 - max(0.9 * blink, 0.35 * raise_, 0.3 * tuck)))
+
+    snow = lib.mat('fie_fx_snow', '#f4fbff', 0.3, emit=0.8)
+    ice = lib.mat('fie_fx_ice', '#9fe8ff', 0.08, coat=1.0, emit=2.2)
+    iceb = lib.mat('fie_fx_iceb', '#cff6ff', 0.05, coat=1.0, emit=1.2, alpha=0.85)
+    # ---------------------------------------------------- send-out: blizzard and landing burst
+    K.swirl(A, 'fie_fx_bliz', (0, 0, 0.1 * s), 15, dur=26, n=26, radius=1.0, height=2.6, turns=1.4, mat=snow, size=0.035, shape='flake', inward=False)
+    K.burst(A, 'fie_fx_land', (0, 0, 0.05), 33, n=18, dur=14, speed=1.1, up=0.4, size=0.03, mat=snow, shape='flake', seed=2)
+    K.ring(A, 'fie_fx_landring', (0, 0, 0.03), 33, dur=12, r0=0.2, r1=0.8, thick=0.04, mat=snow)
+    # landing after the flight
+    lp = A.world(root, 132)
+    K.ring(A, 'fie_fx_land2', (lp.x, lp.y, 0.03), 131, dur=10, r0=0.2, r1=0.9, thick=0.04, mat=snow)
+    # ---------------------------------------------------- Brittle Blast
+    for j, f0 in enumerate(range(153, 160)):
+        p = A.world(B, f0, (0, 0.2, 0))
+        K.burst(A, f'fie_fx_trail{j}', p, f0, n=4, dur=10, speed=0.3, up=0.1, gravity=0.2, size=0.03, mat=snow, shape='flake', seed=j)
+    impact = A.world(root, 160) + dirv * 0.75 * s
+    impact.z = 0.05
+    K.spikes(A, 'fie_fx_spike', impact, 159, n=9, dur=20, height=0.75, mat=ice, radius=0.5, seed=1)
+    K.burst(A, 'fie_fx_shatter', impact + Vector((0, 0, 0.4 * s)), 175, n=20, dur=14, speed=1.2, up=0.7, size=0.035, mat=iceb, shape='shard', seed=3)
+    K.ring(A, 'fie_fx_frostring', (impact.x, impact.y, 0.03), 159, dur=14, r0=0.2, r1=1.5, thick=0.05, mat=ice)
+    K.flash_sphere(A, 'fie_fx_flash', impact + Vector((0, 0, 0.3 * s)), 159, dur=7, r1=0.3, mat=iceb)
+    A.light('fie_fx_light', '#9fe8ff', impact + Vector((0, 0, 0.8 * s)), [(0, 0), (158, 0), (160, 1200 * s * s), (178, 0)])
+    # ---------------------------------------------------- hit: feathers fly
+    feather = lib.mat('fie_fx_feather', '#e8f4ff', 0.4, emit=0.3)
+    hp_ = A.world(root, 187) + Vector((0, 0, 1.0 * s))
+    K.burst(A, 'fie_fx_feathers', hp_, 187, n=10, dur=18, speed=0.8, up=0.8, gravity=0.5, size=0.05, mat=feather, shape='leaf', seed=5)
+    # ---------------------------------------------------- victory snowfall
+    vp = A.world(root, 214)
+    K.swirl(A, 'fie_fx_snowfall', (vp.x, vp.y, 0.2 * s), 212, dur=18, n=14, radius=1.1, height=2.2, turns=0.5, mat=snow, size=0.03, shape='flake', inward=False)

@@ -103,7 +103,7 @@ The framework only does two things. It throws the Star Ball and pops it open wit
 
 | phase | frames | what should happen |
 | --- | --- | --- |
-| send-out | 16-48 | The Pokemon must be invisible before 16 (for example root scale 0.001 until 16). Then a unique entrance that fits the character, ending in its cry. Some examples: Slimean splats out as a puddle and pulls itself up into a ball; Flamber ignites from a single ember; Fiercebird bursts out of a snow flurry with its wings spread. |
+| send-out | 16-48 | The Pokemon must be invisible before 16 (for example root scale 0.001 until 16). Then a unique entrance that fits the character, ending in its cry. Some examples: Slimean splats out as a puddle and pulls itself up into a ball; Flamber ignites from a single ember; Freezer Flock bursts out of a snow flurry with its wings spread. |
 | idle | 48-72 | Its own idle: breathing, blinking (scale the eye pivot's Z), flames flickering, a tail swish, a look around. |
 | walk | 72-138 | Turn and travel across (+X), about 1-2 x `A.size`, in a way only this Pokemon moves: a waddle, a slither with a wave running down the body, a bouncing hop with squash and stretch, a stalking croc crawl, a strutting run, a float with trailing embers. Turn back to face the camera (-Y) by 138. |
 | attack | 140-186 | Anticipation, then the strike, then follow-through. Use a move that fits it: its signature move if it has one (Bog Chomp, Flames of Health, Slime Split, Brittle Blast) or a move from its learnset. Build the effect yourself from `lib` meshes and lights: leaf storms, fire breath, bubble streams, ice shards, a body slam with a shockwave. It should land on `A.opponent(...)` around frame 160-170. |

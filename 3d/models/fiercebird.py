@@ -1,4 +1,4 @@
-"""Fiercebird: huge snowy eagle with spiky ice-blue wings, red scarf and a snowflake eye."""
+"""Freezer Flock (key 'fiercebird'): huge snowy eagle with spiky ice-blue wings, red scarf and a snowflake eye."""
 import math
 from mathutils import Vector
 
@@ -70,7 +70,7 @@ def flake_eye(lib, name, loc, r, look, parent):
 
 
 def build(lib):
-    rig = lib.Rig('Fiercebird', 'fiercebird', 'Ice', height_cm=550, gait='fly', attack='cast')
+    rig = lib.Rig('Freezer Flock', 'fiercebird', 'Ice', height_cm=550, gait='fly', attack='cast')
     w3 = lib.mat('fie_w3', '#4f8fc0', 0.35, coat=0.6, sss=0.08)
     w2 = lib.mat('fie_w2', '#86c0e8', 0.35, coat=0.6, sss=0.08)
     w1 = lib.mat('fie_w1', '#c4e8f8', 0.35, coat=0.6, sss=0.1)
@@ -190,7 +190,7 @@ def build(lib):
 
 
 def animate(A):
-    """Fiercebird: descends out of a blizzard and lands in a burst of snow, screeches with its wings
+    """Freezer Flock: descends out of a blizzard and lands in a burst of snow, screeches with its wings
     spread, flies across on heavy wingbeats, then Brittle Blast: climbs, folds its wings and dives,
     and the air freezes on impact into a cluster of ice spikes that shatter."""
     import bpy
@@ -293,3 +293,7 @@ def animate(A):
     # ---------------------------------------------------- victory snowfall
     vp = A.world(root, 214)
     K.swirl(A, 'fie_fx_snowfall', (vp.x, vp.y, 0.2 * s), 212, dur=18, n=14, radius=1.1, height=2.2, turns=0.5, mat=snow, size=0.03, shape='flake', inward=False)
+
+
+# Phase speeds for render.retime: above 1 is slower and longer, below 1 is quicker.
+TIMING = {'send': 1.6, 'idle': 1.5, 'walk': 1.5, 'attack': 1.7, 'hit': 1.3, 'recover': 1.5}

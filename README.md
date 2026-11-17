@@ -22,10 +22,10 @@ The game saves to your browser when you heal at a Pokemon Center, when you pick 
 
 ## What's in it
 
-- 12 Pokemon from the notebook (001 to 012) and the 2 placeholder legendaries. The bird line turns icy as it evolves: Peeplet is Normal/Flying, Featherdash and Fiercebird are Ice/Flying.
+- 12 Pokemon from the notebook (001 to 012) and the 2 placeholder legendaries. The bird line turns icy as it evolves: Peeplet is Normal/Flying, Featherdash and Freezer Flock are Ice/Flying.
 - Six areas: Star City in the middle and a route plus town on each point of the star. Each route has different wild Pokemon and levels.
 - Battles with type matchups, catching, potions, switching, EXP, level ups, new moves and evolution.
-- Signature moves. Flames of Health (Blazian) and Slime Split (Slimontoon) work the way the notebook describes them. Bog Chomp (Swampest) and Fierce Blast (Fiercebird) are made up for now.
+- Signature moves. Flames of Health (Blazian) and Slime Split (Slimontoon) work the way the notebook describes them. Bog Chomp (Swampest) and Fierce Blast (Freezer Flock) are made up for now.
 - Unique Forms, the notebook's featured element. About 1 in 64 wild Pokemon is a Unique Form: different colors, 20% higher stats and a star next to its name.
 - Pokedex with base stats, totals and signature move text. Press A on an entry's stats page to read its lore.
 
@@ -58,10 +58,10 @@ Wild Pokemon per route and the town names are at the top of `js/map.js`. The spr
 
 These came from blurry photos, so some may be wrong:
 
-- Names: 008 Slimarton, 009 Slimontoon and 012 Fiercebird are my best reading. 010 Peeplet and 011 Featherdash are made up.
+- Names: 008 Slimarton and 009 Slimontoon are my best reading. 010 Peeplet and 011 Featherdash are made up. The design team named 012 Freezer Flock.
 - Stats for 002 Swamporiaer and all three birds were hard to read. The birds' stats are partly guesses.
 - 005 Flamezion's stats add up to 485 but the page says 475. 007 Slimean's add up to 350 but the page says 370.
-- Signature moves for Swampest and Fiercebird.
+- Signature moves for Swampest and Freezer Flock.
 - Town names are placeholders.
 - The robot with the hammer and the bee swarm aren't in yet because they don't have numbers or stats.
 

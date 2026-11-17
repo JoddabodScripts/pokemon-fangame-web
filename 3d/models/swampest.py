@@ -477,3 +477,7 @@ def animate(A):
     # roar at the end shakes pollen loose
     fl2 = A.world(F, 216)
     K.burst(A, 'swe_fx_pollen2', fl2, 216, n=10, dur=16, speed=0.5, up=0.5, gravity=0.3, size=0.02, mat=pollen, seed=5)
+
+
+# Phase speeds for render.retime: above 1 is slower and longer, below 1 is quicker.
+TIMING = {'send': 1.5, 'idle': 1.6, 'walk': 1.5, 'attack': 1.5, 'hit': 1.3, 'recover': 1.4}

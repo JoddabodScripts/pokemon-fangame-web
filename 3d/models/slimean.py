@@ -309,3 +309,7 @@ def animate(A):
     A.key(body, t0 + 21, rot=(0, 0, 0), absolute=True)
     pud(t0 + 12, 1.05); pud(t0 + 14, 0.55); pud(t0 + 20, 0.55); pud(t0 + 21, 1.3); pud(T['END'], 1.0)
     blink(t0 + 21, 1.0); blink(t0 + 22, 0.2); blink(T['END'] - 1, 0.2)          # ends with a happy squint
+
+
+# Phase speeds for render.retime: above 1 is slower and longer, below 1 is quicker.
+TIMING = {'send': 1.3, 'idle': 1.3, 'walk': 1.0, 'attack': 1.3, 'hit': 1.2, 'recover': 1.2}

@@ -385,3 +385,7 @@ def animate(A):
     pose(RL, T['END']); pose(LL, T['END'])
     A.key(core, T['END'], rot=(-0.08, 0, 0))
     eyes(t0 + 21, 1.0); eyes(t0 + 23, 0.12, which=(1,)); eyes(T['END'], 0.12, which=(1,))
+
+
+# Phase speeds for render.retime: above 1 is slower and longer, below 1 is quicker.
+TIMING = {'send': 1.3, 'idle': 1.2, 'walk': 1.1, 'attack': 1.3, 'hit': 1.1, 'recover': 1.2}

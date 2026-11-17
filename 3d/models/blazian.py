@@ -360,3 +360,7 @@ def animate(A):
     # re-ignite at the end
     vic = A.world(root, 214) + Vector((0, 0, 1.5 * s))
     K.burst(A, 'blz_fx_reflare', vic, 213, n=16, dur=16, speed=1.0, up=1.0, gravity=0.5, size=0.025, mat=fire_y, seed=4)
+
+
+# Phase speeds for render.retime: above 1 is slower and longer, below 1 is quicker.
+TIMING = {'send': 1.5, 'idle': 1.3, 'walk': 1.2, 'attack': 1.6, 'hit': 1.2, 'recover': 1.4}

@@ -534,3 +534,7 @@ def animate(A):
         for f, sc in [(0, 0.001), (f_h - 1, 0.001), (f_h + 1, 0.28 * s), (f_h + 5, 0.001)]:
             A.key(st, f, scale=(sc, sc * 0.5, sc) if not isinstance(sc, float) or sc > 0.01 else sc)
     A.light('swo_fx_sun', '#ffe060', (0, 0.1, 0.9), [(0, 0), (141, 0), (149, 120 * s * s), (168, 120 * s * s), (180, 0)], parent=root)
+
+
+# Phase speeds for render.retime: above 1 is slower and longer, below 1 is quicker.
+TIMING = {'send': 1.4, 'idle': 1.4, 'walk': 1.3, 'attack': 1.4, 'hit': 1.2, 'recover': 1.3}

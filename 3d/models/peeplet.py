@@ -457,3 +457,7 @@ def animate(A):
     eyes(222, 1); eyes(224, 0.45); eyes(230, 0.45)                     # happy squint
     beak = A.world(head, 224, (0, -0.5, 0.2))
     note(2, 224, beak, (-0.2 * s, -0.1 * s, 0.45 * s), 12, 1.3)
+
+
+# Phase speeds for render.retime: above 1 is slower and longer, below 1 is quicker.
+TIMING = {'send': 1.0, 'idle': 1.0, 'walk': 0.85, 'attack': 1.1, 'hit': 1.0, 'recover': 1.0}

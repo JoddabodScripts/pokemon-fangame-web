@@ -247,3 +247,7 @@ def animate(A):
         A.key(strand, f, scale=(sc * off, sc * off * 0.4, sc * off * 0.4) if sc > 0.001 else 0.001, absolute=True)
     # shaking off droplets at the end
     K.burst(A, 'slo_fx_shake', (here.x, 0, 1.2 * s), 210, n=12, dur=14, speed=0.9, up=0.5, size=0.03, mat=water, seed=5)
+
+
+# Phase speeds for render.retime: above 1 is slower and longer, below 1 is quicker.
+TIMING = {'send': 1.6, 'idle': 1.6, 'walk': 1.5, 'attack': 1.8, 'hit': 1.4, 'recover': 1.5}

@@ -141,7 +141,7 @@
   S('featherdash', 11, 'Featherdash', ['Ice', 'Flying'], [60, 70, 65, 75, 70, 100],
     { evo: ['fiercebird', 30], rate: 120, xp: 122, learn: snowLearn, height: 120,
       lore: 'When a Peeplet evolves, frost starts creeping into its feathers, and its tail eyes turn the color of ice. It runs faster than it flies and leaves a trail of frozen footprints. Featherdash love to race trainers down the routes, and they sulk when they lose.' });
-  S('fiercebird', 12, 'Fiercebird', ['Ice', 'Flying'], [100, 110, 80, 90, 80, 80],
+  S('fiercebird', 12, 'Freezer Flock', ['Ice', 'Flying'], [100, 110, 80, 90, 80, 80],
     { rate: 45, xp: 216, learn: [...snowLearn, [30, 'icebeam'], [34, 'brittleblast']], sig: 'brittleblast', height: 550,
       lore: 'By the time it is fully grown, every feather has turned to packed snow. It nests on the frozen cliffs above Galecrest. Each bead on its necklace is a chunk of ice it took from a rival it beat. When it dives, the air around it freezes so hard that whatever it hits cracks like thin ice.' });
 

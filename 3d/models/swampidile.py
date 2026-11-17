@@ -371,3 +371,7 @@ def animate(A):
     A.light('swi_fx_l', '#a0ff60', tgt0 + Vector((0, -0.3 * s, 0.2 * s)),
             [(0, 0), (161, 0), (165, 500 * s * s), (169, 250 * s * s), (173, 450 * s * s), (181, 0)])
     A.light('swi_fx_l2', '#c8ff80', (0, 0, 0.5), [(0, 0), (144, 0), (154, 60 * s * s), (174, 40 * s * s), (180, 0)], parent=sp)
+
+
+# Phase speeds for render.retime: above 1 is slower and longer, below 1 is quicker.
+TIMING = {'send': 1.2, 'idle': 1.3, 'walk': 1.1, 'attack': 1.3, 'hit': 1.1, 'recover': 1.2}

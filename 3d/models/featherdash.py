@@ -337,3 +337,7 @@ def animate(A):
     # ---------------------------------------------------- shaking off snow
     sh = A.world(root, 210) + Vector((0, 0, 1.0 * s))
     K.burst(A, 'fea_fx_shake', sh, 209, n=18, dur=16, speed=0.9, up=0.4, size=0.028, mat=snow, shape='flake', seed=6)
+
+
+# Phase speeds for render.retime: above 1 is slower and longer, below 1 is quicker.
+TIMING = {'send': 1.2, 'idle': 1.2, 'walk': 0.9, 'attack': 1.2, 'hit': 1.1, 'recover': 1.3}

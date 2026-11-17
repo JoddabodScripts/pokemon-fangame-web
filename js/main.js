@@ -491,9 +491,10 @@
         const k = list[top + r], sp = SPECIES[k];
         const known = G.state.dex.seen[k];
         const y = 22 + r * 14;
-        text(`${String(sp.num).padStart(3, '0')} ${known ? sp.name.toUpperCase().slice(0, 11) : '-----'}`, 18, y, known ? '#222' : '#888');
-        if (G.state.dex.caught[k]) { ctx.fillStyle = '#d03030'; ctx.fillRect(142, y + 2, 4, 4); }
-        if (top + r === idx) cursor(10, y);
+        // caught Pokemon get a red number
+        text(String(sp.num).padStart(3, '0'), 14, y, G.state.dex.caught[k] ? '#d03030' : known ? '#222' : '#888');
+        text(known ? sp.name.toUpperCase().slice(0, 13) : '-----', 46, y, known ? '#222' : '#888');
+        if (top + r === idx) cursor(7, y);
       }
       const k = list[idx], known = G.state.dex.seen[k];
       box(154, 16, 100, 100, '#e8f0f8');

@@ -451,3 +451,7 @@ def animate(A):
         A.key(wR, f, rot=(A.wave(f, 8, 0.5) * 0.1, -sprd + A.wave(f, 11, 0.8) * 0.12, 0))
         A.key(bp, f, rot=(A.wave(f, 7) * 0.08 + (0.55 if glide else 0), A.wave(f, 10, 0.4) * 0.08, f * 0.05))
         A.key(embers, f, rot=(0, 0, -f * 0.07), loc=(0, 0, A.wave(f, 21) * 0.05))
+
+
+# Phase speeds for render.retime: above 1 is slower and longer, below 1 is quicker.
+TIMING = {'send': 1.3, 'idle': 1.2, 'walk': 1.1, 'attack': 1.3, 'hit': 1.1, 'recover': 1.3}

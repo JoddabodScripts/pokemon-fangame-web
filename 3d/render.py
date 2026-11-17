@@ -321,16 +321,53 @@ def animate_custom(rig, size):
     sendout_ball(size)
     A = Anim(rig, size)
     rig._module.animate(A)
+    M = retime(getattr(rig._module, 'TIMING', {}))
+    end = round(M(Anim.T['END']))
+    sc.frame_end = end
     # the camera follows the root's x
     track = lib.pivot('cam_track')
     K = Keys()
-    for f in range(0, Anim.T['END'] + 1, 3):
+    for f in range(0, end + 1, 3):
         sc.frame_set(f)
         K.key(track, f, loc=(rig.root.matrix_world.translation.x, 0, 0), absolute=True)
-    sc.frame_set(Anim.T['HIT'])
-    hit_flash(size, rig.root.matrix_world.translation.x, Anim.T['HIT'])
+    t_hit = round(M(Anim.T['HIT']))
+    sc.frame_set(t_hit)
+    hit_flash(size, rig.root.matrix_world.translation.x, t_hit)
     sc.frame_set(0)
     return track
+
+
+PHASES = ['send', 'idle', 'walk', 'attack', 'hit', 'recover']
+
+
+def retime(timing):
+    """Stretch or squeeze each animation phase by the model's TIMING factors (1.0 = as written),
+    by moving every keyframe in the scene. Returns the old-frame -> new-frame mapping."""
+    T = Anim.T
+    edges = [0, T['OUT'], T['IDLE'], T['WALK'], T['ATTACK'], T['HIT'], T['RECOVER'], T['END']]
+    factors = [1.0] + [float(timing.get(p, 1.0)) for p in PHASES]
+    new_edges = [0.0]
+    for i in range(len(factors)):
+        new_edges.append(new_edges[-1] + (edges[i + 1] - edges[i]) * factors[i])
+
+    def M(f):
+        for i in range(len(factors)):
+            if f <= edges[i + 1] or i == len(factors) - 1:
+                return new_edges[i] + (f - edges[i]) * factors[i]
+        return f
+
+    if all(abs(x - 1.0) < 1e-6 for x in factors):
+        return M
+    for act in bpy.data.actions:
+        for fc in act.fcurves:
+            for kp in fc.keyframe_points:
+                kp.co.x = M(kp.co.x)
+                kp.handle_left.x = M(kp.handle_left.x)
+                kp.handle_right.x = M(kp.handle_right.x)
+                if kp.interpolation == 'BEZIER':
+                    kp.handle_left_type = kp.handle_right_type = 'AUTO_CLAMPED'
+            fc.update()
+    return M
 
 
 def animate(rig, size):

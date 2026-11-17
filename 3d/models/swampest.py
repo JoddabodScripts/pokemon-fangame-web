@@ -356,3 +356,124 @@ def build(lib):
 
     rig.attack_origin = (0, -1.2, 0.55)
     return rig
+
+
+def animate(A):
+    """Swampest: bursts out of a mud mound with its flower shut, blooms and roars, lumbers across with
+    heavy dusty footfalls, then Bog Chomp: jaws wide, a lunge, a crushing snap that explodes mud and
+    leaves on the opponent, and a head-thrash before letting go."""
+    import anim_kit as K
+    from anim_kit import E, spring, decay
+    from mathutils import Vector
+    r, T, s, lib = A.rig, A.T, A.size, A.lib
+    X = r.x
+    root, B, H, J = r.root, r.body, r.head, r.jaw
+    tail, petals, F = X['tail'], X['petals'], X['flower']
+    pi = math.pi
+    win = K.win
+    D = 1.2 * s
+    aim = 0.8
+    stride = D / 3.2
+    dirv = Vector((math.sin(aim), -math.cos(aim), 0))
+
+    def walk_x(f):
+        return D * E(f, 80, 130)
+
+    A.key(root, 0, scale=0.001)
+    A.key(root, T['OUT'] - 1, scale=0.001)
+    for f in range(T['OUT'], T['END'] + 1):
+        # ------------------------------------------------ root
+        rise = -1.1 * s * (1 - spring((f - 21) / 10, 4, 7)) if f < 40 else 0
+        x = walk_x(f)
+        yaw = (pi / 2) * win(f, 72, 80, 130, 138) + aim * win(f, 141, 149, 176, 184)
+        crouch = win(f, 141, 150, 151, 153)
+        lunge = win(f, 152, 156, 172, 180)
+        kb = win(f, 186, 190, 202, 214)
+        off = dirv * (0.55 * s * lunge - 0.08 * s * crouch - 0.3 * s * kb)
+        A.key(root, f, loc=(x + off.x, off.y, rise), rot=(0, 0, yaw - 0.2 * kb), scale=1.0)
+
+        # ------------------------------------------------ weights
+        W = win(f, 78, 84, 126, 132)
+        th = 2 * pi * walk_x(f) / stride
+        cry = win(f, 39, 42, 46, 48)
+        breathe = math.sin(2 * pi * f / 30)
+        thrash = win(f, 159, 162, 170, 174)
+        hitw = decay(f, 186, 6, 1.0)
+        roar = win(f, 214, 218, 224, 228)
+
+        # ------------------------------------------------ body: heavy sway, crouch, lunge
+        A.key(B, f, loc=(0.03 * s * math.sin(th) * W, 0, -0.06 * s * crouch - 0.03 * s * abs(math.sin(th)) * W + 0.008 * s * breathe),
+              rot=(-0.12 * cry + 0.14 * crouch - 0.1 * lunge + 0.08 * kb, 0.08 * math.sin(th) * W + 0.12 * hitw, 0.06 * math.sin(th) * W),
+              scale=(1 + 0.02 * breathe, 1, 1 + 0.025 * breathe))
+        for lp, sd, ph, front in X['legs']:
+            p_ = th + 2 * pi * ph
+            sw = 0.5 * math.sin(p_) * W
+            lift = max(0, -math.cos(p_)) * 0.25 * W
+            brace = (0.35 if front else -0.2) * crouch + (-0.3 if front else 0.25) * lunge
+            A.key(lp, f, rot=(sw + brace + (0.3 if front else -0.2) * kb, -sd * (0.25 * W * lift + 0.2 * crouch), 0))
+
+        # ------------------------------------------------ tail: drags while walking, whips on the chomp
+        for i, tp in enumerate(tail):
+            sway = 0.12 * math.sin(2 * pi * f / 36 - i * 0.5) * (1 - W) + 0.18 * math.sin(th - 0.7 - i * 0.5) * W
+            whip = 0.35 * math.sin((f - 160) * 0.9 - i * 0.6) * thrash
+            droop = -0.25 * win(f, 186, 190, 204, 214) + 0.1 * roar - 0.15 * (1 - E(f, 30, 40))
+            A.key(tp, f, rot=(droop + 0.06 * cry, 0, sway + whip))
+
+        # ------------------------------------------------ head and jaw (jaw rests 24 deg open)
+        look = win(f, 52, 56, 66, 70) * math.sin(2 * pi * (f - 52) / 18)
+        A.key(H, f, rot=(-0.4 * cry - 0.3 * crouch + 0.15 * lunge - 0.3 * roar + 0.2 * hitw + 0.02 * breathe,
+                         0.25 * math.sin((f - 160) * 1.4) * thrash, 0.3 * look - 0.08 * math.sin(th) * W + 0.25 * kb))
+        gape = 0.75 * cry + 0.8 * crouch + 0.8 * win(f, 152, 154, 157, 158) + 0.7 * roar + 0.3 * win(f, 186, 188, 194, 200)
+        snap = -0.42 * win(f, 158, 159, 172, 176)            # fully shut around the opponent
+        chew = 0.05 * max(0, breathe) * (1 - W)
+        A.key(J, f, rot=(gape + snap + chew, 0, 0))
+        blink = max(win(f, x0, x0 + 1, x0 + 2, x0 + 4) for x0 in (55, 67, 110, 188))
+        for e in X['eyes']:
+            A.key(e, f, scale=(1, 1, 1 - max(0.9 * blink, 0.35 * crouch, 0.3 * W)))
+
+        # ------------------------------------------------ flower: shut, blooms, shuts when hurt, re-blooms
+        shut = (1 - spring((f - 37) / 8, 4, 9)) if f < 60 else 0
+        hurt = win(f, 187, 190, 206, 214)
+        bloom2 = spring((f - 212) / 8, 4, 9) if f >= 212 else 0
+        for q, pp in enumerate(petals):
+            fold = 1.4 * max(shut, 0) + 1.1 * hurt * (1 - bloom2) - 0.15 * thrash - 0.1 * win(f, 141, 146, 156, 160)
+            A.key(pp, f, rot=(fold + 0.05 * math.sin(f * 0.2 + q), 0, 0))
+        A.key(F, f, rot=(0.15 * math.sin(2 * pi * f / 40) + 0.3 * thrash * math.sin(f * 0.8), 0, 0.1 * math.sin(2 * pi * f / 52)))
+
+    # ---------------------------------------------------- send-out: mud mound and clods
+    mud = lib.mat('swe_fx_mud', '#5a3a1e', 0.75)
+    mudw = lib.mat('swe_fx_mudw', '#4a3018', 0.25, coat=0.6)
+    mound = lib.pivot('swe_fx_mound')
+    lib.sphere('swe_fx_moundm', (0, 0, 0), (1.0, 1.2, 0.35), mud, mound, seg=24)
+    for f, sc in [(0, 0.001), (15, 0.001), (18, 0.7), (22, 1.0), (30, 0.9), (40, 0.4), (46, 0.001)]:
+        A.key(mound, f, loc=(0, -0.1 * s, 0), scale=sc * s * 0.45 if sc > 0.001 else 0.001, absolute=True)
+    K.burst(A, 'swe_fx_clod', (0, -0.1 * s, 0.3 * s), 24, n=16, dur=16, speed=1.2, up=0.9, size=0.05, mat=mud, seed=2)
+    pollen = lib.mat('swe_fx_pollen', '#ffd84a', 0.3, emit=3.0)
+    fl = A.world(F, 40)
+    K.burst(A, 'swe_fx_pollen', fl, 40, n=14, dur=18, speed=0.5, up=0.4, gravity=0.3, size=0.02, mat=pollen, seed=1)
+    A.light('swe_fx_bloomlight', '#ffd84a', fl, [(0, 0), (38, 0), (42, 250 * s * s), (52, 0)])
+
+    # ---------------------------------------------------- walk: dust puffs on footfalls
+    dust = lib.mat('swe_fx_dust', '#c9b98d', 0.9, alpha=0.7)
+    for i, f0 in enumerate(range(86, 128, 10)):
+        p = A.world(root, f0)
+        K.ring(A, f'swe_fx_dust{i}', (p.x + 0.2 * s * (1 if i % 2 else -1), p.y + 0.25 * s, 0.03), f0, dur=10, r0=0.05, r1=0.35, thick=0.07, mat=dust)
+
+    # ---------------------------------------------------- Bog Chomp
+    here = A.world(root, 140)
+    tgt = A.world(root, 159) + dirv * 0.8 * s      # right at the snapping jaws
+    tgt.z = 0.25 * s
+    for i in range(6):   # bog bubbles at its feet while it winds up
+        a = i * 1.05
+        c = here + Vector((math.cos(a) * 0.55 * s, math.sin(a) * 0.45 * s, 0.03))
+        K.flash_sphere(A, f'swe_fx_bub{i}', c, 142 + i * 2, dur=7, r1=0.07, mat=mudw)
+    K.burst(A, 'swe_fx_bogA', tgt, 159, n=20, dur=18, speed=1.3, up=1.0, size=0.06, mat=mud, seed=4)
+    K.burst(A, 'swe_fx_bogB', tgt, 160, n=12, dur=20, speed=1.0, up=1.2, gravity=0.8, size=0.05,
+            mat=lib.mat('swe_fx_leaf', '#5fbf4a', 0.4, coat=0.4), shape='leaf', seed=7)
+    K.ring(A, 'swe_fx_bogring', (tgt.x, tgt.y, 0.03), 159, dur=14, r0=0.2, r1=1.4, thick=0.08, mat=mudw)
+    K.spikes(A, 'swe_fx_bogspike', tgt, 160, n=6, dur=16, height=0.5, mat=mudw, radius=0.4, seed=3)
+    K.flash_sphere(A, 'swe_fx_bite', tgt + Vector((0, 0, 0.3 * s)), 158, dur=6, r1=0.16, mat=lib.mat("swe_fx_flash", '#f0ffc0', 0.3, emit=5))
+    A.light('swe_fx_chomplight', '#c8ff7a', tgt + Vector((0, 0, 0.6 * s)), [(0, 0), (157, 0), (159, 800 * s * s), (170, 0)])
+    # roar at the end shakes pollen loose
+    fl2 = A.world(F, 216)
+    K.burst(A, 'swe_fx_pollen2', fl2, 216, n=10, dur=16, speed=0.5, up=0.5, gravity=0.3, size=0.02, mat=pollen, seed=5)

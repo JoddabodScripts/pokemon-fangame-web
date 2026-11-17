@@ -215,3 +215,125 @@ def build(lib):
     rig.t_pose = {'fea_wingL': (0, 1.35, 0), 'fea_wingR': (0, -1.35, 0),
                   'fea_tf0': (0.9, 0, 0), 'fea_tf1': (0.9, 0, -0.7), 'fea_tf2': (0.9, 0, 0.7)}
     return rig
+
+
+def animate(A):
+    """Featherdash: spins out of a snow flurry and skids to a stop, bobs and pecks while idle, sprints
+    across like a roadrunner leaving frosty footprints, then Ice Shard: a crystal forms on its beak
+    and three lightning-fast pecks fire shards. Puffs up when hit, shakes off the snow like a wet dog."""
+    import anim_kit as K
+    from anim_kit import E, spring, decay
+    from mathutils import Vector
+    r, T, s, lib = A.rig, A.T, A.size, A.lib
+    root, B, N, SK, J = r.root, r.body, r.head, r.skull, r.jaw
+    pi = math.pi
+    win = K.win
+    D = 2.0 * s
+    aim = 0.75
+    dirv = Vector((math.sin(aim), -math.cos(aim), 0))
+
+    def run_x(f):
+        return D * (0.06 * E(f, 78, 84) + 0.94 * E(f, 82, 124) ** 1.0) if f < 140 else D
+
+    A.key(root, 0, scale=0.001)
+    A.key(root, T['OUT'] - 1, scale=0.001)
+    for f in range(T['OUT'], T['END'] + 1):
+        # ------------------------------------------------ root: spin-in, run, aim, knockback hop
+        app = spring((f - 17) / 8, 4.5, 8)
+        spin = 2 * pi * 2.5 * (1 - E(f, 17, 34))
+        x = run_x(f)
+        yaw = spin + (pi / 2) * win(f, 72, 77, 128, 136) + aim * win(f, 141, 147, 176, 184)
+        kb = win(f, 186, 190, 198, 208)
+        hop = 0.18 * s * win(f, 186, 189, 192, 197)
+        off = dirv * (-0.35 * s * kb)
+        A.key(root, f, loc=(x + off.x, off.y, hop), rot=(0, 0, yaw), scale=max(0.001, app))
+
+        # ------------------------------------------------ weights
+        sprint = win(f, 82, 86, 118, 122)
+        crouch = win(f, 76, 80, 81, 84) + win(f, 141, 146, 148, 151)
+        skid = win(f, 119, 122, 126, 130)
+        cry = win(f, 37, 40, 45, 48)
+        pecks = [151, 156, 161]
+        peck = max(win(f, p - 2, p, p + 1, p + 4) for p in pecks)
+        windup = win(f, 142, 148, 150, 151)
+        puff = max(0, decay(f, 186, 9, 0.6)) if f >= 186 else 0
+        shake = win(f, 207, 209, 216, 219)
+        proud = win(f, 219, 223, 230, 240)
+        idle = math.sin(2 * pi * f / 30)
+        stride_t = (f - 82) * 2 * pi / 7.0
+
+        # ------------------------------------------------ body: lean into the sprint, puff, shake
+        lean = 0.42 * sprint - 0.3 * skid + 0.18 * crouch - 0.15 * proud + 0.1 * peck
+        bounce = 0.05 * s * abs(math.sin(stride_t)) * sprint
+        A.key(B, f, loc=(0, 0, bounce - 0.06 * s * crouch + 0.01 * s * idle),
+              rot=(lean, 0.45 * math.sin((f - 207) * 2.2) * shake, 0.05 * math.sin(stride_t) * sprint),
+              scale=(1 + 0.18 * puff, 1 + 0.18 * puff, 1 + 0.14 * puff))
+
+        # ------------------------------------------------ legs: idle tap, sprint cycle, skid brace
+        for i, ((leg, ph), knee, foot) in enumerate(zip(r.legs, r.knees, r.feet)):
+            p_ = stride_t + pi * i
+            swing = -0.85 * math.sin(p_) * sprint
+            bend = (0.6 + 0.6 * math.sin(p_ + 0.9)) * sprint
+            tap = 0.25 * win(f, 58 + i * 4, 60 + i * 4, 61 + i * 4, 63 + i * 4)
+            brace = -0.45 * skid + 0.35 * crouch
+            A.key(leg, f, rot=(swing + brace - tap - 0.3 * kb, 0, 0))
+            A.key(knee, f, rot=(bend + 0.3 * crouch + 0.25 * skid + tap * 1.5, 0, 0))
+            A.key(foot, f, rot=(-0.4 * bend * sprint, 0, 0))
+
+        # ------------------------------------------------ neck, skull, beak
+        bobs = max(win(f, a, a + 2, a + 3, a + 6) for a in (52, 64))
+        A.key(N, f, rot=(0.35 * sprint - 0.55 * cry - 0.4 * windup + 0.75 * peck + 0.5 * bobs - 0.35 * proud + 0.3 * puff,
+                         0, 0.25 * math.sin((f - 207) * 2.2 + 0.6) * shake))
+        A.key(SK, f, rot=(-0.25 * sprint + 0.2 * bobs - 0.15 * peck + 0.03 * idle, 0, 0.2 * win(f, 66, 68, 70, 72)))
+        A.key(J, f, rot=(0.6 * cry + 0.45 * windup + 0.35 * peck + 0.3 * win(f, 186, 188, 192, 196) + 0.4 * win(f, 223, 225, 228, 230), 0, 0))
+
+        # ------------------------------------------------ wings, tail fan, scarf
+        flare = 0.9 * cry + 0.55 * puff + 0.4 * skid + 0.35 * proud + 0.25 * windup
+        for w, sx in r.wings:
+            flap = 0.25 * math.sin(f * 1.4) * win(f, 186, 188, 196, 202)
+            A.key(w, f, rot=(0, sx * (flare + flap), 0))
+        fan = 0.9 * cry + 0.6 * puff + 0.5 * proud - 0.3 * sprint
+        stream = 0.5 * sprint - 0.2 * skid
+        A.key(r.tail[0], f, rot=(-stream + 0.15 * cry + 0.08 * math.sin(2 * pi * f / 34), 0, 0.15 * math.sin(stride_t * 0.5) * sprint))
+        for i, fp in enumerate(r.tfeathers):
+            sd = (0, -1, 1)[i]
+            A.key(fp, f, rot=(0.35 * fan, sd * 0.45 * fan, sd * 0.2 * fan))
+        for i, sp in enumerate(r.scarf):
+            flut = (0.35 * sprint + 0.12) * math.sin(f * (0.9 if sprint > 0.3 else 0.25) - i * 0.9)
+            A.key(sp, f, rot=(0.6 * sprint + 0.1 * cry, 0, flut + 0.2 * shake * math.sin(f * 2 - i)))
+
+    # ---------------------------------------------------- send-out: snow flurry
+    snow = lib.mat('fea_fx_snow', '#f4fbff', 0.3, emit=0.8)
+    ice = lib.mat('fea_fx_ice', '#9fe8ff', 0.1, coat=1.0, emit=2.0)
+    K.swirl(A, 'fea_fx_flurry', (0, 0, 0.05 * s), 15, dur=24, n=22, radius=0.75, height=1.4, turns=1.6, mat=snow, size=0.03, shape='flake')
+    K.burst(A, 'fea_fx_puff', (0, -0.2 * s, 0.1 * s), 33, n=12, dur=12, speed=0.8, up=0.3, size=0.03, mat=snow, shape='flake', seed=2)
+
+    # ---------------------------------------------------- frosty footprints and the skid spray
+    frost = lib.mat('fea_fx_print', '#c8f0ff', 0.1, coat=1.0, emit=0.6)
+    for n, f0 in enumerate(range(86, 120, 4)):
+        p = A.world(root, f0)
+        fp = lib.pivot(f'fea_fx_print{n}')
+        lib.sphere(f'fea_fx_printm{n}', (0, 0, 0), (0.09 * s, 0.05 * s, 0.008 * s), frost, fp, seg=12)
+        sd = 0.08 * s * (1 if n % 2 else -1)
+        for f, sc in [(0, 0.001), (f0 - 1, 0.001), (f0, 1.0), (f0 + 40, 1.0), (f0 + 52, 0.001)]:
+            A.key(fp, f, loc=(p.x, p.y + sd, 0.012), scale=sc, absolute=True)
+    sk = A.world(root, 121)
+    K.burst(A, 'fea_fx_skid', (sk.x + 0.3 * s, sk.y, 0.05), 121, n=16, dur=14, speed=1.0, up=0.6, size=0.03, mat=snow, shape='flake', seed=4)
+
+    # ---------------------------------------------------- Ice Shard
+    beak = A.world(SK, 147, (0, -0.32, 0))
+    crys = lib.pivot('fea_fx_crys')
+    lib.cone('fea_fx_crysm', (0, 0, 0), 0.05 * s, 0.0, 0.16 * s, ice, crys, rot=(pi / 2, 0, aim), seg=6)
+    for f, sc in [(0, 0.001), (141, 0.001), (148, 1.0), (150, 1.2), (151, 0.001)]:
+        A.key(crys, f, loc=beak, scale=sc, absolute=True)
+    A.light('fea_fx_cryslight', '#9fe8ff', beak, [(0, 0), (141, 0), (148, 120 * s * s), (151, 0)])
+    for j, p in enumerate((151, 156, 161)):
+        st = A.world(SK, p, (0, -0.35, 0))
+        tgt = A.opponent(st) + Vector((0, 0, (j - 1) * 0.12 * s))
+        K.projectile(A, f'fea_fx_shard{j}', st, tgt, p, flight=9, mat=ice, radius=0.05, shape='shard', trail=2)
+        K.flash_sphere(A, f'fea_fx_muzzle{j}', st, p, dur=4, r1=0.08, mat=ice)
+        K.burst(A, f'fea_fx_hit{j}', tgt, p + 9, n=8, dur=10, speed=0.8, up=0.5, size=0.03, mat=ice, shape='shard', seed=j)
+
+    # ---------------------------------------------------- shaking off snow
+    sh = A.world(root, 210) + Vector((0, 0, 1.0 * s))
+    K.burst(A, 'fea_fx_shake', sh, 209, n=18, dur=16, speed=0.9, up=0.4, size=0.028, mat=snow, shape='flake', seed=6)

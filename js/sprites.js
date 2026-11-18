@@ -252,43 +252,42 @@
       p.px(19, 32, '#fff'); p.px(20, 33, '#fff'); p.px(29, 32, '#fff'); p.px(28, 33, '#fff'); // fangs
     },
     blazian(p) {
-      // sun spirit: a mane of flames around its head, a sun on its chest, fireballs for hands
-      const dk = '#8a1e10', rd = '#d63a24', or = '#f0782a', orLt = '#ffa858', ye = '#ffd84a', pl = '#fff4b8';
-      const face = '#ffe6a8', faceDk = '#f0b860';
-      // floating embers
-      for (const [x, y, c] of [[3, 30, ye], [44, 32, or], [6, 40, or], [42, 41, ye], [40, 3, ye]]) p.px(x, y, c);
-      // legs with flame feet
-      p.line(21, 35, 17, 42, or, 4); p.line(27, 35, 31, 42, or, 4);
-      p.line(20, 36, 17, 40, orLt); p.line(26, 36, 29, 40, orLt);
-      p.poly([[12, 43], [15, 39], [19, 41], [21, 46], [12, 46]], rd); p.poly([[14, 45], [16, 41], [19, 43], [19, 46]], ye);
-      p.poly([[27, 41], [33, 39], [36, 43], [36, 46], [27, 46]], rd); p.poly([[29, 46], [30, 43], [33, 41], [34, 46]], ye);
-      // arms up and out, with flame bands
-      p.line(19, 27, 10, 21, or, 4); p.line(29, 27, 38, 21, or, 4);
-      p.line(18, 26, 11, 21, orLt); p.line(30, 26, 37, 21, orLt);
-      p.line(14, 22, 15, 26, rd, 2); p.line(34, 22, 33, 26, rd, 2);
-      // fireball hands
-      for (const x of [6, 42]) { p.circ(x, 19, 5, rd); p.circ(x, 19, 4, or); p.circ(x, 19, 2, ye); p.px(x - 1, 18, pl); }
-      p.poly([[3, 15], [5, 9], [7, 14]], or); p.poly([[41, 14], [43, 8], [45, 15]], or);
-      // torso with the sun on its chest
-      p.ell3(24, 30, 6, 7, dk, or, orLt);
-      p.rect(19, 35, 11, 2, rd);
-      p.circ(24, 29, 3, ye); p.px(24, 29, pl); p.px(23, 28, pl);
-      for (const [dx, dy] of [[0, -5], [5, 0], [0, 5], [-5, 0], [4, -4], [-4, -4], [4, 4], [-4, 4]]) p.px(24 + dx, 29 + dy, ye);
-      // flame mane all the way around the head, like the sun
-      for (let k = 0; k < 12; k++) {
-        const a = (k * 30 - 90) * Math.PI / 180, a1 = a - 0.26, a2 = a + 0.26;
-        const r = k % 2 ? 11 : 14;
-        p.poly([[24 + Math.cos(a1) * 6, 13 + Math.sin(a1) * 6], [24 + Math.cos(a) * r, 13 + Math.sin(a) * r], [24 + Math.cos(a2) * 6, 13 + Math.sin(a2) * 6]], k % 2 ? or : rd);
+      // floating sun spirit: sun body with a face, flame corona, two fireball hands, flame wisp below
+      const dk = '#8a1e10', rd = '#d63a24', or = '#f0782a', ye = '#ffc83a', pl = '#fff2a0';
+      const sun = '#ffae1a', sunDk = '#e07a10';
+      const cx = 24, cy = 20;
+      // wisp below
+      p.poly([[17, 28], [31, 28], [27, 38], [25, 47], [22, 39]], rd);
+      p.poly([[20, 28], [28, 28], [26, 35], [24, 42], [22, 35]], or);
+      p.poly([[22, 28], [26, 28], [25, 33], [24, 36], [23, 33]], ye);
+      // corona: alternating long red and short orange flames
+      for (let q = 0; q < 16; q++) {
+        const a = (q * Math.PI) / 8 + 0.1, L = q % 2 ? 15 : 19, w = q % 2 ? 0.2 : 0.17;
+        const tip = [cx + Math.sin(a) * L, cy - Math.cos(a) * L];
+        const l = [cx + Math.sin(a - w) * 10, cy - Math.cos(a - w) * 10], r = [cx + Math.sin(a + w) * 10, cy - Math.cos(a + w) * 10];
+        p.poly([l, tip, r], q % 2 ? or : rd);
+        if (!(q % 2)) p.poly([[cx + Math.sin(a - 0.08) * 11, cy - Math.cos(a - 0.08) * 11], [cx + Math.sin(a) * 15, cy - Math.cos(a) * 15], [cx + Math.sin(a + 0.08) * 11, cy - Math.cos(a + 0.08) * 11]], ye);
       }
-      p.circ(24, 13, 9, or);
-      p.circ(24, 13, 8, ye);
-      // glowing face
-      p.ell3(24, 14, 6, 6, faceDk, face, pl);
-      p.poly([[17, 15], [19, 14], [19, 16]], rd); p.poly([[31, 15], [29, 14], [29, 16]], rd);   // flame cheek marks
-      p.rect(20, 12, 3, 3, '#2a0a06'); p.px(21, 13, '#ff8a2a'); p.px(20, 12, '#ffffff');
-      p.rect(26, 12, 3, 3, '#2a0a06'); p.px(27, 13, '#ff8a2a'); p.px(26, 12, '#ffffff');
-      p.line(19, 10, 22, 11, dk); p.line(26, 11, 29, 10, dk);
-      p.poly([[21, 17], [27, 17], [25, 19], [23, 19]], '#7a1a10'); p.px(22, 17, '#ffffff'); p.px(26, 17, '#ffffff');
+      // sun body and face
+      p.ell3(cx, cy, 11, 11, sunDk, sun, pl);
+      p.ell(cx, cy + 3, 7, 5, '#ffc240');
+      // eyes, brows, cheek flames, fanged grin
+      for (const sd of [-1, 1]) {
+        const ex = cx + sd * 4;
+        p.ell(ex, cy, 2, 3, '#2a0a06'); p.px(ex - 1, cy - 2, '#ffffff'); p.px(ex, cy + 2, '#ff8a2a');
+        p.line(ex - 2 * sd, cy - 4, ex + 2 * sd, cy - 3, dk);
+        p.poly([[cx + sd * 9, cy + 2], [cx + sd * 7, cy + 1], [cx + sd * 7, cy + 3]], rd);
+      }
+      p.poly([[cx - 3, cy + 5], [cx + 3, cy + 5], [cx + 2, cy + 7], [cx - 2, cy + 7]], '#7a1a10');
+      p.px(cx - 2, cy + 5, '#ffffff'); p.px(cx + 2, cy + 5, '#ffffff'); p.px(cx, cy + 7, '#ff6a5a');
+      // fireball hands floating at the sides
+      for (const sd of [-1, 1]) {
+        const hx = cx + sd * 19, hy = 30;
+        p.poly([[hx - 3, hy - 1], [hx + sd * 1, hy - 9], [hx + 3, hy - 1]], rd);
+        p.circ(hx, hy, 4, rd); p.circ(hx, hy, 3, or); p.circ(hx, hy, 1, ye); p.px(hx - 1, hy - 1, pl);
+      }
+      // floating embers
+      for (const [x, y, c] of [[4, 8, ye], [44, 10, or], [8, 42, or], [40, 44, ye]]) p.px(x, y, c);
     },
     slimean(p) {
       // round slime with a ring inside (from the notebook)

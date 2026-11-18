@@ -129,131 +129,110 @@ def big_eye(lib, name, loc, r, parent, look, P, iris='#e8a020', ring='#7a3a10', 
 
 
 def build(lib):
+    """Blazian as a floating sun spirit: a glowing sun body with the face on it, a corona of flames,
+    two fireball hands floating at its sides and a flame wisp instead of legs."""
     P = 'blz_'
-    rig = lib.Rig('Blazian', 'blazian', 'Fire', height_cm=200, gait='walk', attack='cast')
+    rig = lib.Rig('Blazian', 'blazian', 'Fire', height_cm=200, gait='float', attack='cast')
     R = math.radians
-    k = 0.92
     M = fire_mats(lib, P)
-    rd = lib.mat(P + 'brd', '#c62c0e', 0.45, emit=0.06, coat=0.2)
-    orr = lib.mat(P + 'bor', '#ec6612', 0.42, emit=0.08, coat=0.3)
-    orlt = lib.mat(P + 'borlt', '#ff9438', 0.42, emit=0.12, coat=0.3)
-    ye = lib.mat(P + 'bye', '#ffc626', 0.4, emit=0.35, coat=0.2)
-    face = lib.mat(P + 'face', '#ffdc8c', 0.4, emit=0.22)
-    sun = lib.mat(P + 'sun', '#ffcc28', 0.35, emit=0.9)
-    sunpl = lib.mat(P + 'sunpl', '#fff0a8', 0.35, emit=1.2)
+    sunb = lib.mat(P + 'sunbody', '#ffae1a', 0.35, emit=0.55, emit_color='#ffb030', sss=0.3, coat=0.35)
+    rim = lib.mat(P + 'rim', '#f06412', 0.4, emit=0.4, coat=0.2)
+    face = lib.mat(P + 'face', '#ffe49a', 0.35, emit=0.35, sss=0.2, coat=0.3)
+    glow = lib.mat(P + 'glow', '#ffd84a', 0.3, emit=3.0)
     dark = lib.mat(P + 'dark', '#6a140a', 0.5)
     mouth = lib.mat(P + 'mouth', '#7a1a10', 0.5)
+    tongue = lib.mat(P + 'tongue', '#ff6a5a', 0.4, sss=0.2)
     fang = lib.mat(P + 'fang', '#ffffff', 0.25, emit=0.3)
+    blush = lib.mat(P + 'blush', '#ff5a3a', 0.4, emit=0.3)
 
-    rig.body = lib.pivot(P + 'body', (0, 0, 0.95 * k), rig.root)
+    rig.body = lib.pivot(P + 'body', (0, 0, 1.0), rig.root)
     B = rig.body
-    B.scale = (k, k, k)
+    hc, hr = (0, 0, 0), (0.42, 0.37, 0.42)
 
-    # torso with the sun emblem
-    tc, tr = (0, 0, 0.02), (0.26, 0.2, 0.31)
-    lib.sphere(P + 'torso', tc, tr, orr, B)
-    lib.sphere(P + 'pelvis', (0, 0, -0.235), (0.22, 0.18, 0.11), rd, B)
-    decal(lib, P + 'chestlt', oval(0.16, 0.2, 0, 0.03), tc, tr, orlt, B, lift=1.008, n=1)
-    decal(lib, P + 'sun', oval(0.085, 0.085, 0, 0.03), tc, tr, sun, B, lift=1.03, n=1)
-    decal(lib, P + 'sunc', oval(0.04, 0.04, -0.012, 0.045), tc, tr, sunpl, B, lift=1.045, n=1)
-    for q in range(8):
-        a = q * math.pi / 4
-        p = on_ell(tc, tr, math.cos(a) * 0.135, 0.03 + math.sin(a) * 0.135, 1.02)
-        lib.sphere(f'{P}sunray{q}', p, (0.016, 0.012, 0.026), sun, B, rot=(0, -(a - math.pi / 2), 0))
+    # ---- the sun: core, darker rim behind, glow ring
+    lib.sphere(P + 'core', hc, hr, sunb, B, seg=48)
+    lib.sphere(P + 'rimback', (0, 0.07, 0), (0.44, 0.3, 0.44), rim, B, seg=40)
+    lib.torus(P + 'halo', (0, 0.06, 0), 0.47, 0.035, glow, B, rot=(math.pi / 2, 0, 0))
 
-    # legs with flame feet
-    for s, nm, ph in ((-1, 'L', 0.0), (1, 'R', 0.5)):
-        lp = lib.pivot(P + 'leg' + nm, (s * 0.11, 0, -0.26), B)
-        lib.sphere(P + 'hip' + nm, (0, 0, 0), 0.115, orr, lp)
-        lib.tube(P + 'legm' + nm, [(0, 0, 0), (s * 0.04, -0.01, -0.28), (s * 0.09, 0, -0.56)], [0.115, 0.1, 0.085], orr, lp)
-        fx, fz = s * 0.09, -0.6
-        lib.sphere(P + 'foot' + nm, (fx, -0.03, fz - 0.005), (0.11, 0.15, 0.08), M['rd'], lp)
-        drop(lib, P + 'ff_a' + nm, 0.085, 0.26, M['rd'], lp, (fx + s * 0.04, 0.0, fz), d=(s * 0.9, 0, 0.8), flat=0.9)
-        drop(lib, P + 'ff_b' + nm, 0.085, 0.26, M['rd'], lp, (fx, -0.08, fz), d=(0, -1, 0.45), flat=0.9)
-        drop(lib, P + 'ff_c' + nm, 0.075, 0.22, M['rd'], lp, (fx, 0.05, fz), d=(-s * 0.2, 1, 0.7), flat=0.9)
-        drop(lib, P + 'ff_d' + nm, 0.055, 0.18, M['ye'], lp, (fx, -0.12, fz + 0.02), d=(s * 0.2, -1, 0.9), flat=0.8)
-        rig.legs.append((lp, ph))
-
-    # head: glowing face in a ring of flame
-    rig.head = lib.pivot(P + 'head', (0, 0, 0.3), B)
-    H = rig.head
-    hc, hr = (0, 0, 0.3), (0.27, 0.25, 0.27)
-    lib.sphere(P + 'neck', (0, 0, 0.03), (0.1, 0.09, 0.1), orr, H)
-    lib.sphere(P + 'headm', hc, hr, ye, H, seg=40)
-    lib.sphere(P + 'disc', (0, 0.08, 0.3), (0.34, 0.215, 0.34), orr, H)
-    decal(lib, P + 'facep', oval(0.18, 0.175, 0, -0.01), hc, hr, face, H, lift=1.01, n=1, rings=6)
-    mn = lib.pivot(P + 'mane', (0, 0.05, 0.3), H)
-    for q in range(12):
-        a = q * math.pi / 6
+    # ---- corona: long and short flames all the way round, plus a yellow inner ring
+    C = lib.pivot(P + 'corona', (0, 0.05, 0), B)
+    for q in range(16):
+        a = q * math.pi / 8 + 0.1
         dx, dz = math.sin(a), math.cos(a)
         long_ = q % 2 == 0
-        drop(lib, f'{P}mane{q}', 0.115 if long_ else 0.1, 0.42 if long_ else 0.3, M['rd'] if long_ else M['orr'], mn,
-             (dx * 0.24, 0, dz * 0.24), d=(dx, 0, dz), bend=(0.03 * dz, 0) if long_ else (0, 0), flat=0.75, base=0.8)
+        drop(lib, f'{P}cor{q}', 0.12 if long_ else 0.09, 0.42 if long_ else 0.28, M['rd'] if long_ else M['orr'], C,
+             (dx * 0.36, 0.02, dz * 0.36), d=(dx, 0.08, dz), bend=(0.05 * dz, 0) if long_ else (0, 0), flat=0.7, base=0.8)
         if long_:
-            drop(lib, f'{P}manei{q}', 0.055, 0.22, M['orr'], mn, (dx * 0.27, -0.075, dz * 0.27), d=(dx, -0.05, dz), flat=0.6, base=0.8)
-    rig.extras.append((mn, 'pulse'))
-    for s in (-1, 1):
-        p = on_ell(hc, hr, s * 0.098, 0.03, 0.99)
-        lib.eye(f'{P}eye{s}', p, 0.062, H, iris='#ff8a2a', pupil='#2a0a06', sclera='#2a0a06', look=(s * 0.2, -1, 0.05), iris_frac=0.5, flat=0.7)
-        lib.tube(f'{P}brow{s}', [on_ell(hc, hr, s * 0.035, 0.085, 1.03), on_ell(hc, hr, s * 0.1, 0.115, 1.04), on_ell(hc, hr, s * 0.165, 0.125, 1.03)],
-                 [0.012, 0.016, 0.01], dark, H)
-        decal(lib, f'{P}mark{s}', [(s * 0.215, -0.045), (s * 0.15, -0.015), (s * 0.15, -0.085)], hc, hr, M['rd'], H, lift=1.03, rings=3)
-        fp = on_ell(hc, hr, s * 0.062, -0.1, 1.0)
-        lib.cone(f'{P}fang{s}', (fp[0], fp[1] - 0.01, fp[2] - 0.022), 0.018, 0.0, 0.055, fang, H, rot=_aim((0, 0.35, -1)), seg=10)
-    decal(lib, P + 'mouth', [(-0.095, -0.095), (0.095, -0.095), (0.045, -0.165), (-0.045, -0.165)], hc, hr, mouth, H, lift=1.03)
-    pts = []
-    for q in range(9):
-        x = -0.125 + 0.25 * q / 8
-        pts.append(on_ell(hc, hr, x, -0.095 + 0.035 * max(0, (abs(x) - 0.08) / 0.045) ** 1.5, 1.035))
-    lib.tube(P + 'grin', pts, [0.005] + [0.008] * 7 + [0.005], mouth, H)
+            drop(lib, f'{P}cori{q}', 0.06, 0.24, M['ye'], C, (dx * 0.4, -0.04, dz * 0.4), d=(dx, -0.02, dz), flat=0.6, base=0.8)
+    rig.extras.append((C, 'pulse'))
 
-    # arms raised up and out, fireballs for hands. Mesh hangs straight down; the rest pose lifts it.
-    for s, nm, ph in ((-1, 'L', 0.0), (1, 'R', 0.5)):
-        ap = lib.pivot(P + 'arm' + nm, (s * 0.2, 0, 0.19), B, rot=(0, -s * R(118), 0))
-        lib.sphere(P + 'sho' + nm, (0, 0, 0), 0.095, orr, ap)
-        lib.tube(P + 'armm' + nm, [(0, 0, 0), (0, 0, -0.22), (0, 0, -0.44)], [0.095, 0.082, 0.075], orr, ap)
-        lib.torus(P + 'band' + nm, (0, 0, -0.26), 0.078, 0.03, M['rd'], ap)
-        up = (s * 0.88, 0, -0.47)        # world-up seen from the raised arm
-        hz = -0.54
-        lib.sphere(P + 'ball' + nm, (0, 0, hz), 0.15, M['rd'], ap)
-        lib.sphere(P + 'ballo' + nm, (0, -0.035, hz), 0.128, M['orr'], ap)
-        lib.sphere(P + 'bally' + nm, (0, -0.085, hz), 0.085, M['ye'], ap)
-        lib.sphere(P + 'ballp' + nm, (0, -0.15, hz), (0.035, 0.03, 0.035), M['pl'], ap)
-        drop(lib, P + 'bf_a' + nm, 0.12, 0.36, M['rd'], ap, (up[0] * 0.06, 0.02, hz + up[2] * 0.06), d=up, flat=0.9, base=0.85)
-        drop(lib, P + 'bf_b' + nm, 0.075, 0.26, M['orr'], ap, (up[0] * 0.08, -0.07, hz + up[2] * 0.08), d=(up[0], -0.1, up[2]), flat=0.8, base=0.85)
-        rig.arms.append((ap, ph))
-        rig.t_pose[ap.name] = (0, -s * R(90), 0)
+    # ---- face (its own pivot so it can nod across the sun)
+    rig.head = lib.pivot(P + 'head', (0, 0, 0), B)
+    H = rig.head
+    decal(lib, P + 'facep', oval(0.27, 0.24, 0, -0.02), hc, hr, face, H, lift=1.006, n=1, rings=6)
+    for sd in (-1, 1):
+        p = on_ell(hc, hr, sd * 0.125, 0.05, 0.99)
+        big_eye(lib, f'{P}eye{sd}', p, 0.085, H, (sd * 0.25, -1, 0.06), P, iris='#ff9a1a', ring='#8a2a08', pupil='#2a0a06')
+        lib.tube(f'{P}brow{sd}', [on_ell(hc, hr, sd * 0.05, 0.16, 1.035), on_ell(hc, hr, sd * 0.13, 0.19, 1.04),
+                                  on_ell(hc, hr, sd * 0.21, 0.175, 1.03)], [0.014, 0.02, 0.012], dark, H)
+        decal(lib, f'{P}mark{sd}', [(sd * 0.27, -0.06), (sd * 0.2, -0.03), (sd * 0.2, -0.1)], hc, hr, M['rd'], H, lift=1.025, rings=3)
+        lib.sphere(f'{P}blush{sd}', on_ell(hc, hr, sd * 0.22, -0.1, 1.0), (0.045, 0.012, 0.03), blush, H, seg=12)
+    decal(lib, P + 'mouth', [(-0.11, -0.12), (0.11, -0.12), (0.06, -0.2), (-0.06, -0.2)], hc, hr, mouth, H, lift=1.02)
+    decal(lib, P + 'tongue', oval(0.04, 0.025, 0, -0.18), hc, hr, tongue, H, lift=1.03, n=1, rings=3)
+    for sd in (-1, 1):
+        fp = on_ell(hc, hr, sd * 0.07, -0.125, 1.0)
+        lib.cone(f'{P}fang{sd}', (fp[0], fp[1] - 0.012, fp[2] - 0.02), 0.02, 0.0, 0.055, fang, H, rot=_aim((0, 0.35, -1)), seg=10)
 
-    # floating embers
-    em = embers(lib, P, B, (0, 0, 0.0), [(0.4, 0.75, -0.2, 0.03), (2.2, 0.8, -0.35, 0.025), (3.5, 0.7, -0.6, 0.028),
-                                          (5.0, 0.78, -0.65, 0.024), (1.2, 0.6, 0.85, 0.022), (4.2, 0.55, 0.2, 0.02)], [M['ye'], M['orr']])
+    # ---- two fireball hands, floating at the sides (pivot at the body centre, so they can orbit)
+    rig.hands = []
+    for sd, nm, ph in ((-1, 'L', 0.0), (1, 'R', 0.5)):
+        hp = lib.pivot(P + 'hand' + nm, (0, 0, 0), B)
+        x, z = sd * 0.74, -0.08
+        lib.sphere(P + 'ball' + nm, (x, 0, z), 0.16, M['rd'], hp)
+        lib.sphere(P + 'ballo' + nm, (x, -0.035, z), 0.135, M['orr'], hp)
+        lib.sphere(P + 'bally' + nm, (x, -0.085, z), 0.09, M['ye'], hp)
+        lib.sphere(P + 'ballp' + nm, (x, -0.15, z), (0.04, 0.03, 0.04), M['pl'], hp)
+        drop(lib, P + 'bf_a' + nm, 0.12, 0.34, M['rd'], hp, (x + sd * 0.03, 0.02, z + 0.05), d=(sd * 0.35, 0, 1), flat=0.9, base=0.85)
+        drop(lib, P + 'bf_b' + nm, 0.075, 0.24, M['orr'], hp, (x - sd * 0.04, -0.06, z + 0.06), d=(-sd * 0.2, -0.1, 1), flat=0.8, base=0.85)
+        drop(lib, P + 'bf_c' + nm, 0.06, 0.18, M['ye'], hp, (x + sd * 0.07, -0.05, z + 0.03), d=(sd * 0.8, -0.1, 0.6), flat=0.8, base=0.85)
+        rig.arms.append((hp, ph))
+        rig.hands.append((hp, sd))
+
+    # ---- flame wisp underneath instead of legs
+    F = lib.pivot(P + 'wisp', (0, 0.02, -0.34), B)
+    drop(lib, P + 'wisp_r', 0.22, 0.62, M['rd'], F, (0, 0, 0.05), d=(0, 0.1, -1), bend=(0.06, 0), flat=0.85, base=0.9)
+    drop(lib, P + 'wisp_o', 0.15, 0.44, M['orr'], F, (0, -0.04, 0.04), d=(0, 0.05, -1), bend=(-0.04, 0), flat=0.8, base=0.9)
+    drop(lib, P + 'wisp_y', 0.09, 0.26, M['ye'], F, (0, -0.07, 0.03), d=(0, 0, -1), flat=0.8, base=0.9)
+    rig.extras.append((F, 'flicker'))
+    rig.wisp = F
+
+    em = embers(lib, P, B, (0, 0, 0.0), [(0.4, 0.95, -0.3, 0.03), (2.2, 0.9, -0.45, 0.025), (3.5, 0.85, -0.7, 0.028),
+                                          (5.0, 0.9, -0.75, 0.024), (1.2, 0.75, 0.75, 0.022), (4.2, 0.7, 0.4, 0.02)], [M['ye'], M['orr']])
     rig.extras.append((em, 'spin'))
-
-    rig.attack_origin = (0, -0.5, 1.3)
+    rig.embers = em
+    rig.attack_origin = (0, -0.6, 1.0)
+    rig.t_pose = {}
     return rig
 
 
 def animate(A):
-    """Blazian: rises out of a pillar of flame as its mane bursts alight, strides across leaving
-    burning footprints, then Flames of Health: charges a sun orb between its fireball hands, blasts a
-    stream of fire, and soaks up the heat as golden healing sparks spiral around it."""
+    """Blazian, sun spirit: ignites inside a pillar of flame as its corona bursts open and its hands fly
+    in, floats across trailing embers with the wisp streaming behind, then Flames of Health: the hands
+    meet in front, charge a sun orb, blast a stream of fire, and golden sparks spiral in as it heals."""
     import bpy
     import anim_kit as K
     from anim_kit import E, spring, decay
     from mathutils import Vector
     r, T, s, lib = A.rig, A.T, A.size, A.lib
-    root, B, H = r.root, r.body, r.head
-    mane = bpy.data.objects['blz_mane']
-    arms = [(a, (-1 if a.name.endswith('L') else 1)) for a, _ in r.arms]
-    legs = [l for l, _ in r.legs]
+    root, B, H, C, F, em = r.root, r.body, r.head, bpy.data.objects['blz_corona'], r.wisp, r.embers
     eyes = [bpy.data.objects['blz_eye-1'], bpy.data.objects['blz_eye1']]
-    sun = lib.mat('blz_sun', '#ffcc28')
-    face = lib.mat('blz_face', '#ffdc8c')
-    pi, R = math.pi, math.radians
+    sunb = lib.mat('blz_sunbody', '#ffae1a')
+    face = lib.mat('blz_face', '#ffe49a')
+    halo = lib.mat('blz_glow', '#ffd84a')
+    pi = math.pi
     win = K.win
     D = 1.5 * s
     aim = 0.6
-    stride = D / 3.0
 
     def walk_x(f):
         return D * E(f, 80, 128)
@@ -265,11 +244,10 @@ def animate(A):
         x = walk_x(f)
         yaw = (pi / 2) * win(f, 72, 79, 129, 137) + aim * win(f, 141, 147, 178, 185)
         kb = win(f, 186, 190, 200, 212)
-        A.key(root, f, loc=(x - 0.15 * s * kb * math.sin(aim), 0.3 * s * kb, 0.02 * s * (1 - E(f, 20, 30))),
-              rot=(0, 0, yaw), scale=max(0.001, app))
+        hover = 0.06 * s + 0.035 * s * math.sin(2 * pi * f / 36)
+        A.key(root, f, loc=(x - 0.15 * s * kb * math.sin(aim), 0.3 * s * kb, hover), rot=(0, 0, yaw), scale=max(0.001, app))
 
         W = win(f, 78, 84, 124, 130)
-        th = 2 * pi * walk_x(f) / stride
         cry = win(f, 37, 40, 45, 48)
         idle = math.sin(2 * pi * f / 36)
         charge = win(f, 141, 147, 152, 154)
@@ -279,41 +257,42 @@ def animate(A):
         stag = win(f, 186, 189, 198, 206)
         victory = win(f, 211, 216, 230, 240)
 
-        # body: bounce in the stride, lean into the blast, stagger
-        A.key(B, f, loc=(0.025 * s * idle * (1 - W), 0, 0.03 * s * abs(math.sin(th)) * W + 0.03 * s * cry - 0.04 * s * charge),
-              rot=(0.08 * W - 0.12 * cry + 0.1 * charge - 0.18 * thrust + 0.22 * stag - 0.1 * victory,
-                   0.1 * hitw, 0.06 * math.sin(th) * W + 0.03 * idle * (1 - W)))
-        # legs: stride and stance
-        for i, lp in enumerate(legs):
-            p_ = th + pi * i
-            A.key(lp, f, rot=(-0.55 * math.sin(p_) * W + (0.2 if i else -0.2) * thrust + 0.25 * stag * (1 if i else -1), 0,
-                              (0.08 if i else -0.08) * (cry + victory)))
-        # arms: swing, cheer, gather, thrust (rest pose holds them raised at 118 deg)
-        for k, (a, sd) in enumerate(arms):
-            swing = 0.45 * math.sin(th + pi * k) * W
-            cheer = -sd * R(55) * (cry + victory)
-            gather_y = sd * R(118) * (charge + thrust)
-            gather_x = -R(95) * (charge + thrust) + R(15) * charge
-            inward = -sd * R(25) * charge
-            flail = 0.5 * hitw * math.sin(k * 2 + 1)
-            A.key(a, f, rot=(swing + gather_x + flail, cheer + gather_y + 0.06 * idle * (1 - W), inward))
-        # head
-        A.key(H, f, rot=(-0.3 * cry - 0.12 * charge + 0.1 * thrust + 0.25 * stag - 0.22 * victory + 0.02 * idle,
-                         0, 0.12 * math.sin(2 * pi * f / 70) * (1 - W)))
-        # mane: bursts alight, flares when charging, sputters when hit
-        burst = spring((f - 27) / 7, 4, 9)
-        sput = 1 - 0.35 * win(f, 186, 188, 200, 210) + 0.08 * math.sin(f * 1.7) * win(f, 186, 190, 204, 210)
-        reflare = 0.35 * win(f, 210, 214, 216, 222)
-        A.key(mane, f, rot=(0, 0.04 * math.sin(f * 0.3), 0),
-              scale=max(0.001, burst * sput * (1 + 0.06 * idle + 0.2 * charge + 0.15 * cry + reflare + 0.1 * heal)))
+        # sun body: lean into travel, swell when charging, squash when hit
+        sq = 1 + 0.08 * charge + 0.05 * cry - 0.12 * max(0, hitw) + 0.04 * heal
+        A.key(B, f, rot=(0.18 * W + 0.12 * thrust - 0.1 * cry + 0.2 * stag - 0.08 * victory, 0.1 * hitw, 0.05 * idle * (1 - W)),
+              scale=(sq * (1 + 0.06 * max(0, hitw)), sq, sq * (1 - 0.06 * max(0, hitw))))
+        # face: nods, looks around, scrunches when hit
+        look = win(f, 52, 56, 66, 70) * math.sin(2 * pi * (f - 52) / 22)
+        A.key(H, f, rot=(-0.12 * cry + 0.08 * charge + 0.15 * stag - 0.1 * victory, 0, 0.18 * look))
         blink = max(win(f, x0, x0 + 1, x0 + 2, x0 + 4) for x0 in (55, 66, 100, 194))
         for e in eyes:
-            A.key(e, f, scale=(1, 1, 1 - max(0.9 * blink, 0.4 * charge)))
+            A.key(e, f, scale=(1, 1, 1 - max(0.9 * blink, 0.45 * charge, 0.5 * stag)))
+        # corona: bursts open, spins, flares, sputters, re-ignites
+        burst = spring((f - 26) / 7, 4, 9)
+        sput = 1 - 0.4 * win(f, 186, 188, 200, 210) + 0.08 * math.sin(f * 1.9) * win(f, 186, 190, 204, 210)
+        flare = 0.25 * cry + 0.3 * charge + 0.15 * thrust + 0.35 * win(f, 210, 214, 216, 222) + 0.12 * heal + 0.05 * idle
+        A.key(C, f, rot=(0, 0.015 * f + 0.6 * E(f, 141, 154), 0), scale=max(0.001, burst * sput * (1 + flare)))
+        # hands: fly in, bob, raise for the cry, come together in front to charge, thrust, scatter, cheer
+        for hp, sd in r.hands:
+            fly_in = 1 - spring((f - 24) / 8, 4, 8)
+            bob = 0.12 * math.sin(2 * pi * f / 28 + (0 if sd < 0 else pi))
+            raise_ = -sd * (0.6 * cry + 0.75 * victory)
+            front = -sd * (1.25 * charge + 1.35 * thrust)
+            scatter = 0.6 * max(0, hitw) * sd
+            swing = 0.35 * math.sin(2 * pi * f / 16 + (0 if sd < 0 else pi)) * W
+            A.key(hp, f, rot=(swing, raise_ + bob * (1 - charge) + scatter - sd * 0.5 * fly_in, front),
+                  scale=max(0.001, 1 - 0.9 * fly_in + 0.12 * charge))
+        # wisp streams back when moving, gutters when hit
+        A.key(F, f, rot=(-0.55 * W - 0.3 * kb + 0.15 * math.sin(f * 0.5), 0, 0.12 * math.sin(f * 0.37)),
+              scale=(1, 1, 1 + 0.35 * W + 0.15 * math.sin(f * 0.8) - 0.3 * win(f, 186, 188, 200, 206)))
+        A.key(em, f, rot=(0, 0, f * (0.06 + 0.15 * heal)))
 
-    for f, v in [(0, 0.9), (140, 0.9), (150, 6), (156, 3), (166, 3), (172, 8), (184, 0.9), (187, 0.2), (200, 0.6), (214, 4), (224, 0.9)]:
-        A.emission(sun, f, v)
-    for f, v in [(0, 0.22), (166, 0.22), (172, 1.5), (184, 0.22)]:
+    for f, v in [(0, 0.55), (140, 0.55), (150, 2.5), (156, 1.5), (166, 1.5), (172, 3.0), (184, 0.55), (187, 0.15), (200, 0.35), (214, 1.6), (224, 0.55)]:
+        A.emission(sunb, f, v)
+    for f, v in [(0, 0.35), (166, 0.35), (172, 1.4), (184, 0.35)]:
         A.emission(face, f, v)
+    for f, v in [(0, 3.0), (186, 0.5), (205, 0.8), (214, 5.0), (224, 3.0)]:
+        A.emission(halo, f, v)
 
     fire_r = lib.mat('blz_fx_red', '#ff3c00', 0.3, emit=3.0)
     fire_y = lib.mat('blz_fx_ye', '#ffb020', 0.3, emit=4.0)
@@ -322,44 +301,37 @@ def animate(A):
     K.ring(A, 'blz_fx_ring', (0, 0, 0.03), 16, dur=12, r0=0.1, r1=0.9, thick=0.06, mat=fire_r)
     pil = lib.pivot('blz_fx_pillar')
     for i in range(5):
-        lib.cone(f'blz_fx_pil{i}', (0.08 * math.sin(i * 2.1), 0.08 * math.cos(i * 2.1), 0.5), 0.28 - 0.03 * i, 0.0, 1.0 + 0.15 * i,
+        lib.cone(f'blz_fx_pil{i}', (0.08 * math.sin(i * 2.1), 0.08 * math.cos(i * 2.1), 0.5), 0.26 - 0.03 * i, 0.0, 1.0 + 0.15 * i,
                  fire_r if i % 2 else fire_y, pil, seg=12)
-    for f, sz, w in [(0, 0.001, 0.001), (16, 0.001, 0.001), (19, 1.2, 1.0), (24, 1.6, 0.9), (30, 0.9, 0.6), (35, 0.001, 0.001)]:
-        A.key(pil, f, scale=(w * s * 0.9, w * s * 0.9, sz * s * 0.9) if sz > 0.001 else 0.001, absolute=True)
+    for f, sz, w in [(0, 0.001, 0.001), (16, 0.001, 0.001), (19, 1.2, 0.9), (24, 1.5, 0.8), (29, 0.8, 0.5), (33, 0.001, 0.001)]:
+        A.key(pil, f, scale=(w * s * 0.8, w * s * 0.8, sz * s * 0.9) if sz > 0.001 else 0.001, absolute=True)
     A.light('blz_fx_pillight', '#ff8030', (0, -0.5 * s, 0.9 * s), [(0, 0), (16, 0), (20, 900 * s * s), (34, 0)])
-    K.burst(A, 'blz_fx_cryembers', (0, 0, 1.4 * s), 38, n=16, dur=16, speed=0.9, up=0.9, gravity=0.6, size=0.025, mat=fire_y, seed=1)
-
-    # ---------------------------------------------------- burning footprints
-    for n, f0 in enumerate(range(86, 128, 8)):
-        p = A.world(root, f0)
-        fl = lib.pivot(f'blz_fx_step{n}')
-        lib.cone(f'blz_fx_stepm{n}', (0, 0, 0.08), 0.06, 0.0, 0.16, fire_r if n % 2 else fire_y, fl, seg=8)
-        sd = 0.1 * s * (1 if n % 2 else -1)
-        for f, sc in [(0, 0.001), (f0 - 1, 0.001), (f0 + 1, 1.2 * s), (f0 + 10, 0.8 * s), (f0 + 18, 0.001)]:
-            A.key(fl, f, loc=(p.x, p.y + sd, 0.0), scale=sc, absolute=True)
-
+    K.burst(A, 'blz_fx_cryembers', (0, 0, 0.7 * s), 38, n=18, dur=16, speed=0.9, up=0.9, gravity=0.6, size=0.025, mat=fire_y, seed=1)
+    # ---------------------------------------------------- ember trail while floating across
+    for n, f0 in enumerate(range(84, 128, 4)):
+        p = A.world(F, f0, (0, 0.1, -0.4))
+        K.burst(A, f'blz_fx_trail{n}', p, f0, n=3, dur=10, speed=0.2, up=0.3, gravity=0.3, size=0.02,
+                mat=fire_y if n % 2 else fire_r, seed=n)
     # ---------------------------------------------------- Flames of Health
-    chest = A.world(B, 152, (0, -0.45, 0.05))
+    front = A.world(B, 152, (0, -0.75, -0.05))
     orb = lib.pivot('blz_fx_orb')
     lib.sphere('blz_fx_orbc', (0, 0, 0), 0.6, core, orb, seg=20)
     lib.sphere('blz_fx_orbs', (0, 0, 0), 1.0, lib.mat('blz_fx_orbshell', '#ff7a1a', 0.3, emit=2.5, alpha=0.6), orb, seg=20)
-    for f, sc in [(0, 0.001), (143, 0.001), (146, 0.05), (152, 0.16), (154, 0.2), (156, 0.001)]:
-        A.key(orb, f, loc=chest, scale=sc * s if sc > 0.001 else 0.001, absolute=True)
-    A.light('blz_fx_orblight', '#ffa040', chest, [(0, 0), (143, 0), (153, 700 * s * s), (157, 0)])
-    tgt = A.opponent(chest)
+    for f, sc in [(0, 0.001), (143, 0.001), (146, 0.05), (152, 0.15), (154, 0.19), (156, 0.001)]:
+        A.key(orb, f, loc=front, scale=sc * s if sc > 0.001 else 0.001, absolute=True)
+    A.light('blz_fx_orblight', '#ffa040', front, [(0, 0), (143, 0), (153, 700 * s * s), (157, 0)])
+    tgt = A.opponent(front)
     for j in range(7):
-        K.projectile(A, f'blz_fx_blast{j}', chest + Vector((0, 0, 0.03 * s * (j % 3 - 1))), tgt, 155 + j, flight=8,
+        K.projectile(A, f'blz_fx_blast{j}', front + Vector((0, 0, 0.03 * s * (j % 3 - 1))), tgt, 155 + j, flight=8,
                      mat=fire_y if j % 2 else fire_r, radius=0.07 + 0.01 * (j % 3), trail=2)
-    K.flash_sphere(A, 'blz_fx_muzzle', chest, 155, dur=6, r1=0.25, mat=core)
-    # healing: golden sparks spiral up around Blazian and it glows
+    K.flash_sphere(A, 'blz_fx_muzzle', front, 155, dur=6, r1=0.22, mat=core)
     heal_m = lib.mat('blz_fx_heal', '#ffe66a', 0.3, emit=5.0)
     here = A.world(root, 168)
     K.swirl(A, 'blz_fx_heal', (here.x, here.y, 0.05), 166, dur=22, n=18, radius=0.6, height=1.9, turns=1.3, mat=heal_m, size=0.022, inward=True)
     K.ring(A, 'blz_fx_healring', (here.x, here.y, 0.04), 168, dur=14, r0=0.9, r1=0.2, thick=0.03, mat=heal_m)
     A.light('blz_fx_heallight', '#ffe080', here + Vector((0, -0.4 * s, 1.0 * s)), [(0, 0), (166, 0), (172, 500 * s * s), (184, 0)])
-    # re-ignite at the end
-    vic = A.world(root, 214) + Vector((0, 0, 1.5 * s))
-    K.burst(A, 'blz_fx_reflare', vic, 213, n=16, dur=16, speed=1.0, up=1.0, gravity=0.5, size=0.025, mat=fire_y, seed=4)
+    vic = A.world(B, 214)
+    K.burst(A, 'blz_fx_reflare', vic, 213, n=18, dur=16, speed=1.0, up=0.9, gravity=0.5, size=0.025, mat=fire_y, seed=4)
 
 
 # Phase speeds for render.retime: above 1 is slower and longer, below 1 is quicker.

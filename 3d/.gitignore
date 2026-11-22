@@ -2,3 +2,6 @@ renders/_*
 renders/preview_*
 __pycache__/
 renders/batch.log
+renders/v2frames/
+renders/*.log
+renders/_v2*

@@ -62,9 +62,6 @@ def body_elements():
     # head: big and round
     E.append(ell(tuple(HEAD), (0.6, 0.58, 0.55)))
     E.append(ell((0, -0.5, 3.9), (0.32, 0.28, 0.28)))
-    # chest ruff: three soft points along the bottom of the bib
-    for x in (-0.3, 0.0, 0.3):
-        E.append(El((x, -0.62, 2.28 - abs(x) * 0.25), (0.17, 0.3, 0.12), frame((0, -0.25, -1), (0, -1, 0.2)), stops=None))
     for s, sx in SIDE.items():
         e = EYES[s]
         # brow ridge over each eye, slanting down toward the beak

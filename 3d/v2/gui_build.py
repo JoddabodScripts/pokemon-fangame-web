@@ -2,7 +2,8 @@
 
 Run with a display (not -b):  blender --factory-startup -P gui_build.py
 Each stage runs on a timer, so the viewport redraws in between: you see the skeleton appear,
-the sculpted body, the eyes and beak, thousands of feathers, then materials and the final pose.
+the sculpt shapes added group by group, the fused and painted body, the eyes, beak, talons and scarf,
+then the pose, materials and a rendered viewport.
 """
 import math
 import os
@@ -69,55 +70,72 @@ def s_skeleton():
     state['arm'].show_in_front = True
 
 
+def preview_group(label, make):
+    """Add one group of sculpt shapes to a live metaball preview, so the body grows part by part.
+    These are the same shapes build_body() fuses; the preview only uses a coarser resolution."""
+    def run():
+        if 'mb' not in state:
+            ff.place_eyes()
+            mb = bpy.data.metaballs.new('ffk_sculpt_mb')
+            mb.resolution = 0.07
+            mb.threshold = 0.6
+            o = bpy.data.objects.new('ffk_sculpt', mb)
+            kit.link(o)
+            state['mb'] = mb
+            state['mbo'] = o
+        for e in make():
+            el = state['mb'].elements.new(type='ELLIPSOID')
+            el.co = e.co
+            el.radius = 1.0
+            el.stiffness = ff.STIFF
+            el.size_x, el.size_y, el.size_z = e.size / ff.ISO
+            el.rotation = e.R.to_quaternion()
+    run.__name__ = 's_' + label
+    return run
+
+
+def torso():
+    B = ff.body_elements()
+    for e in B:
+        e.size = e.size * e.k
+    return B
+
+
 def s_body():
-    ff.place_eyes()
-    body, bb, radii = ff.build_body(state['arm'])
-    state.update(body=body, bb=bb, radii=radii)
+    bpy.data.objects.remove(state.pop('mbo'))
+    state['body'] = ff.build_body(state['arm'])
 
 
 def s_eyes():
-    for s in 'LR':
-        ff.snowflake_eye(state['arm'], s)
+    ff.eyes(state['arm'])
 
 
 def s_beak():
-    ff.beak(state['arm'])
+    ff.D.beak(state['arm'])
 
 
-def s_feathers():
-    ff.body_feathers(state['body'], state['arm'], state['bb'], state['radii'])
-
-
-def s_wing_l():
-    ff.wing(state['arm'], 'L')
-
-
-def s_wing_r():
-    ff.wing(state['arm'], 'R')
-
-
-def s_tail():
-    ff.tail(state['arm'])
-
-
-def s_legs():
-    ff.legs(state['arm'])
-
-
-def s_ice():
-    ff.ice(state['arm'])
+def s_talons():
+    ff.talons(state['arm'])
 
 
 def s_scarf():
-    ff.scarf(state['arm'])
+    ff.D.scarf(state['arm'])
     for o in bpy.context.scene.objects:
         if o.type == 'MESH' and any(m.type == 'ARMATURE' for m in o.modifiers):
             o.parent = state['arm']
+        elif o.type == 'MESH' and o.parent is None:
+            o.parent = state['root']
 
 
 def s_pose():
     ff.pose_bones(state['arm'], ff.display_pose())
     select_only([state['arm'].name])
+
+
+def s_colors():
+    win, area, space, region = view3d()
+    space.shading.color_type = 'VERTEX'
+    space.shading.light = 'STUDIO'
 
 
 def s_material():
@@ -129,11 +147,11 @@ def s_render_view():
     import render2
     render2.sky()
     render2.sun()
-    look(-30, 8, 12.5, (0, 0, 3.3), 'RENDERED')
     sc = bpy.context.scene
     sc.render.engine = 'CYCLES'
-    sc.cycles.preview_samples = 4
+    sc.cycles.preview_samples = 6
     sc.cycles.use_preview_denoising = True
+    look(-30, 8, 12.5, (0, 0, 3.3), 'RENDERED')
 
 
 def spin(start, end, steps, pitch, dist, center=(0, 0, 3.0)):
@@ -156,24 +174,25 @@ def build_plan():
     PLAN.append((lambda: look(-30, 12, 14, (0, 0, 2.6), 'SOLID'), 1.5))
     add(s_skeleton, 2.0, (-30, 12, 12, (0, 0, 2.6)))
     PLAN.extend(spin(-30, 10, 6, 12, 12, (0, 0, 2.6)))
-    add(s_body, 2.5, (10, 10, 10, (0, 0, 2.8)))
-    PLAN.extend(spin(10, -40, 8, 10, 9.5, (0, 0, 3.0)))
+    add(preview_group('torso', torso), 2.0, (-25, 10, 10, (0, 0, 2.8)))
+    add(preview_group('crest', ff.crest_elements), 1.5, (-40, 10, 7, (0, 0, 3.8)))
+    add(preview_group('tail', ff.tail_elements), 1.5, (140, 15, 10, (0, 0.6, 2.2)))
+    add(preview_group('legs', ff.leg_elements), 1.5, (-40, 5, 7, (0, 0, 1.2)))
+    add(preview_group('wing_L', lambda: ff.wing_elements('L')), 1.5, (20, 30, 13, (1.2, 0, 3.0)))
+    add(preview_group('wing_R', lambda: ff.wing_elements('R')), 1.5, (-20, 30, 14, (0, 0, 3.0)))
+    PLAN.extend(spin(-20, 20, 6, 20, 14, (0, 0, 3.0)))
+    add(s_body, 2.5, (-25, 10, 13, (0, 0, 3.0)))
+    PLAN.append((s_colors, 2.0))
+    PLAN.extend(spin(-25, 25, 8, 10, 13, (0, 0, 3.0)))
     add(s_eyes, 1.5, (-25, 8, 4.5, (0, -0.5, 3.95)))
-    add(s_beak, 2.0, (-35, 8, 4.5, (0, -0.6, 3.9)))
-    PLAN.extend(spin(-35, 20, 8, 8, 4.5, (0, -0.6, 3.9)))
-    add(s_feathers, 2.5, (-30, 10, 9, (0, 0, 3.0)))
-    PLAN.extend(spin(-30, 30, 10, 8, 8.5, (0, 0, 3.1)))
-    add(s_wing_l, 1.5, (40, 35, 13, (1.6, 0, 3.0)))
-    add(s_wing_r, 1.5, (-20, 35, 14, (0, 0, 3.0)))
-    PLAN.extend(spin(-20, 20, 6, 35, 14, (0, 0, 3.0)))
-    add(s_tail, 1.5, (150, 15, 10, (0, 0.6, 2.0)))
-    add(s_legs, 1.5, (-40, 5, 6, (0, 0, 1.1)))
-    add(s_ice, 1.5, (-25, 15, 12, (0, 0, 3.4)))
-    add(s_scarf, 2.0, (-25, 8, 6, (0, -0.2, 3.3)))
+    add(s_beak, 1.5, (-35, 8, 4.5, (0, -0.6, 3.9)))
+    PLAN.extend(spin(-35, 20, 6, 8, 4.5, (0, -0.6, 3.9)))
+    add(s_talons, 1.5, (-40, 5, 6, (0, 0, 1.1)))
+    add(s_scarf, 2.0, (-25, 8, 6, (0, -0.2, 3.1)))
     add(s_pose, 2.0, (-30, 8, 14, (0, 0, 3.4)))
     PLAN.append((s_material, 4.0))
     PLAN.extend(spin(-35, 25, 10, 8, 13, (0, 0, 3.3)))
-    PLAN.append((s_render_view, 10.0))
+    PLAN.append((s_render_view, 25.0))
     PLAN.append((lambda: bpy.ops.wm.quit_blender(), 1.0))
 
 

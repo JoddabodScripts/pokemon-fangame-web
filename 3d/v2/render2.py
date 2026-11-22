@@ -361,12 +361,16 @@ if __name__ == '__main__':
     mode = args[0]
     os.makedirs(OUT, exist_ok=True)
     t0 = time.time()
-    if mode in ('still', 'tpose', 'head'):
+    if mode in ('still', 'tpose', 'head', 'turn'):
         w, h, s = (int(a) for a in (args[1:4] if len(args) >= 4 else (1280, 720, 48)))
         rig = setup(pose=(mode != 'tpose'))
         print('BUILD seconds', round(time.time() - t0))
         settings(s, w, h)
         shots = [((-3.9, -9.4, 1.4), (0, 0, 3.6), 30, 'a'), ((-1.6, -5.6, 4.3), (0, -0.7, 4.55), 55, 'b')]
+        if mode == 'turn':
+            shots = [((0, -12, 3.2), (0, 0, 3.0), 35, 't1'), ((-8.5, -8.5, 3.6), (0, 0, 3.0), 35, 't2'),
+                     ((-12, 0, 3.2), (0, 0, 3.0), 35, 't3'), ((-6, 9, 4.5), (0, 0, 3.0), 35, 't4'),
+                     ((-2.5, -5.0, 2.0), (0, -0.2, 2.0), 40, 't5'), ((-3.5, -3.5, 5.5), (0, 0, 3.4), 35, 't6')]
         if mode == 'head':
             shots = [((0, -3.4, 4.0), (0, -0.6, 4.0), 50, 'h1'), ((-2.4, -2.6, 4.1), (0, -0.6, 4.0), 50, 'h2'),
                      ((-3.4, -0.6, 4.0), (0, -0.6, 4.0), 50, 'h3')]

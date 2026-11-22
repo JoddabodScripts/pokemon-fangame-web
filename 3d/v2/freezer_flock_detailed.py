@@ -37,9 +37,9 @@ def bone_list():
         ('head', (0, -0.16, 3.62), (0, -0.3, 4.4), 'neck', True),
         ('jaw', (0, -0.62, 3.78), (0, -0.9, 3.76), 'head', True),
         ('tail', (0, 0.5, 1.86), (0, 1.0, 1.42), 'hips', True),
-        ('scarf0', (0.26, -0.62, 3.2), (0.34, -0.8, 2.85), 'chest', True),
-        ('scarf1', (0.34, -0.8, 2.85), (0.42, -0.84, 2.45), 'scarf0', True),
-        ('scarf2', (0.42, -0.84, 2.45), (0.52, -0.8, 2.05), 'scarf1', True),
+        ('scarf0', (0.26, -0.66, 3.2), (0.33, -0.63, 2.85), 'chest', True),
+        ('scarf1', (0.33, -0.63, 2.85), (0.38, -0.56, 2.45), 'scarf0', True),
+        ('scarf2', (0.38, -0.56, 2.45), (0.44, -0.44, 2.05), 'scarf1', True),
     ]
     for s, sx in SIDE.items():
         b += [
@@ -686,7 +686,7 @@ def scarf(arm):
     W = kit.skin_weights([V(v) for v in vs], {'chest': SEG['chest'], 'neck': SEG['neck']}, {'chest': 0.6, 'neck': 0.6})
     mb.add(vs, fs, cs, None, W)
     # knot at the front-right
-    kc = V((0.26, -0.64, 3.2))
+    kc = V((0.26, -0.68, 3.2))
     for k in range(2):
         secs = []
         for i in range(9):
@@ -826,5 +826,5 @@ def display_pose():
     P['chest'] = (0.08, 0, 0)
     P['neck'] = (-0.12, 0, 0)
     P['head'] = (0.08, 0, 0)
-    P['tail'] = (-0.25, 0, 0)
+    P['tail'] = (0.3, 0, 0)
     return P

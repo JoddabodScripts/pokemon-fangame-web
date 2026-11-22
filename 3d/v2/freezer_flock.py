@@ -75,7 +75,7 @@ def body_elements():
         u2 = f.cross(r).normalized()
         ang = math.radians(22)
         along = r * sx * math.cos(ang) + u2 * math.sin(ang)
-        E.append(El(e + f * 0.1 + u2 * 0.13 + r * sx * 0.01, (0.1, 0.25, 0.08), frame(along, f), paint='solid',
+        E.append(El(e + f * 0.1 + u2 * 0.16 + r * sx * 0.01, (0.085, 0.27, 0.06), frame(along, f), paint='solid',
                     color=NAVY, brow=True))
         # cheek tufts sweeping back
         for k, (dz, L) in enumerate(((0.0, 0.3), (-0.17, 0.24))):
@@ -84,13 +84,14 @@ def body_elements():
             E.append(El(root + d.normalized() * L * 0.55, (0.13, L, 0.1), frame(d, (sx * 1, 0, 0.4))))
         # shoulders
         E.append(ell((sx * 0.72, 0.12, 3.08), (0.32, 0.26, 0.22)))
-        # feathered thighs with a pointed cuff
-        E.append(ell((sx * 0.44, 0.02, 1.72), (0.3, 0.33, 0.42), k=0.8))
-        E.append(ell((sx * 0.46, -0.03, 1.3), (0.24, 0.25, 0.24), k=0.8))
-        for k, a in enumerate((-0.9, 0.0, 0.9)):
-            d = V((sx * 0.35 + math.sin(a) * 0.5, -math.cos(a) * 0.5, -1.0))
-            c = V((sx * 0.46, -0.03, 1.2)) + V((math.sin(a) * sx * 0.18, -math.cos(a) * 0.18, -0.06)) + d.normalized() * 0.16
-            E.append(El(c, (0.08, 0.15, 0.06), frame(d, (math.sin(a) * sx, -math.cos(a), 0.3))))
+        # feathered thigh tapering into a fringe of soft points around the ankle
+        E.append(ell((sx * 0.44, 0.02, 1.68), (0.31, 0.34, 0.46), k=0.8))
+        for k in range(6):
+            a = 2 * math.pi * k / 6 + 0.3
+            out = V((math.cos(a), math.sin(a), 0))
+            d = out * 0.45 + V((0, 0, -1))
+            c = V((sx * 0.46, -0.02, 1.3)) + out * 0.17 + d.normalized() * 0.08
+            E.append(El(c, (0.09, 0.16, 0.06), frame(d, out)))
     return E
 
 
@@ -100,7 +101,7 @@ def crest_elements():
     for x, L, up in ((0.0, 0.85, 0.75), (-0.2, 0.66, 0.5), (0.2, 0.66, 0.5), (-0.36, 0.44, 0.3), (0.36, 0.44, 0.3)):
         root = HEAD + V((x, 0.0, 0.42 - abs(x) * 0.35))
         d = V((x * 0.6, 1.0, up))
-        E.append(El(root + d.normalized() * L * 0.75, (0.12, L, 0.07), frame(d, (x * 1.5, -0.3, 1)), paint='grad', stops=st,
+        E.append(El(root + d.normalized() * L * 0.75, (0.12, L, 0.09), frame(d, (x * 1.5, -0.3, 1)), paint='grad', stops=st,
                     weights={'head': 1.0}))
     return E
 
@@ -163,14 +164,17 @@ def wing_elements(s):
 def tail_elements():
     out = []
     t0, t1 = SEG['tail']
-    axis = (t1 - t0).normalized()
-    nrm = V((0, 0.55, 0.85))
+    axis = V((0, 1, -0.75)).normalized()
+    nrm = V((0, 0.6, 1.0))
+    # thick wedge where the fan leaves the body, so it never reads as a needle from the side
+    out.append(El(t0 + axis * 0.35 + V((0, 0, 0.02)), (0.3, 0.5, 0.14), frame(axis, nrm), paint='grad',
+                  stops=[(0, SNOW), (1, SNOW2)], weights={'tail': 1.0}))
     st = [(0, SNOW), (0.4, SNOW2), (0.7, ICE1), (0.9, ICE2), (1, ICE3)]
     for k in range(5):
         a = (k / 4 * 2 - 1) * math.radians(34)
         d = Matrix.Rotation(a, 3, (nrm - axis * nrm.dot(axis)).normalized()) @ axis
-        L = 0.8 - 0.08 * abs(k - 2)
-        out.append(El(t0 + d * (L * 0.85 + 0.05), (0.22, L, 0.06), frame(d, nrm), paint='grad', stops=st, weights={'tail': 1.0}))
+        L = 0.95 - 0.1 * abs(k - 2)
+        out.append(El(t0 + d * (L * 0.85 + 0.05), (0.3, L, 0.075), frame(d, nrm), paint='grad', stops=st, weights={'tail': 1.0}))
     return out
 
 
@@ -201,28 +205,35 @@ def all_elements():
 
 
 # ------------------------------------------------------------------ sculpt
-def metaballs(name, E, resolution=None):
-    """Union of exact ellipsoids as one mesh (melted together later by the voxel remesh)."""
-    import bmesh
-    unit = bmesh.new()
-    bmesh.ops.create_uvsphere(unit, u_segments=32, v_segments=16, radius=1.0)
-    uv = [v.co.copy() for v in unit.verts]
-    uf = [[v.index for v in f.verts] for f in unit.faces]
-    unit.free()
-    verts, faces = [], []
+STIFF = 5.0
+ISO = math.sqrt(1 - (0.6 / STIFF) ** (1 / 3))      # where a lone element's surface sits, as a fraction of its size
+
+
+def metaballs(name, E, resolution=0.02):
+    """Smooth union of the shapes: metaball ellipsoids sized so each one alone matches its exact
+    semi-axes; where shapes meet, their fields add up into soft fillets instead of hard creases."""
+    mb = bpy.data.metaballs.new(name + '_mb')
+    mb.resolution = mb.render_resolution = resolution
+    mb.threshold = 0.6
     for e in E:
-        M = e.R @ Matrix.Diagonal(e.size)
-        base = len(verts)
-        verts += [tuple(e.co + M @ p) for p in uv]
-        faces += [[base + i for i in f] for f in uf]
-    me = bpy.data.meshes.new(name)
-    me.from_pydata(verts, [], faces)
+        el = mb.elements.new(type='ELLIPSOID')
+        el.co = e.co
+        el.radius = 1.0
+        el.stiffness = STIFF
+        sz = e.size / ISO
+        el.size_x, el.size_y, el.size_z = sz
+        el.rotation = e.R.to_quaternion()
+    mo = bpy.data.objects.new(name + '_mbo', mb)
+    kit.link(mo)
+    dg = bpy.context.evaluated_depsgraph_get()
+    me = bpy.data.meshes.new_from_object(mo.evaluated_get(dg))
+    bpy.data.objects.remove(mo)
     o = bpy.data.objects.new(name, me)
     kit.link(o)
     return o
 
 
-def remesh(o, voxel=0.02, smooth_iter=8):
+def remesh(o, voxel=0.02, smooth_iter=3):
     r = o.modifiers.new('remesh', 'REMESH')
     r.mode = 'VOXEL'
     r.voxel_size = voxel
@@ -245,13 +256,13 @@ def place_eyes():
     B = [e for e in body_elements() if not e.brow]
     for e in B:
         e.size = e.size * e.k
-    probe = metaballs('ffk_probe', B)
+    probe = metaballs('ffk_probe', B, resolution=0.04)
     remesh(probe, voxel=0.04, smooth_iter=4)
     bvh = kit.bvh_of(probe)
     for s in SIDE:
         look = LOOK[s]
         hit = bvh.ray_cast(HEAD + look * 1.5, -look)[0]
-        EYES[s] = hit - look * 0.09
+        EYES[s] = hit - look * 0.06
     bpy.data.objects.remove(probe)
 
 
@@ -417,7 +428,7 @@ def body_material():
 def build_body(arm):
     E = all_elements()
     o = metaballs('ffk_body', E, resolution=0.03)
-    remesh(o, voxel=0.02, smooth_iter=8)
+    remesh(o, voxel=0.02, smooth_iter=3)
     W = paint_and_skin(o, E)
     o.data.materials.append(body_material())
     kit.bind(o, arm, W)

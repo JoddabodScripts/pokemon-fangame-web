@@ -85,7 +85,7 @@ def body_pose(phi, power=1.0, tuck=0.0):
     P['chest'] = (0.06 + 0.04 * power * bob, 0, 0)
     P['neck'] = (-0.1 - 0.05 * power * bob, 0, 0)
     P['head'] = (0.06 + 0.04 * power * bob, 0, 0)
-    P['tail'] = (-0.2 + 0.12 * power * math.sin(w * (phi - 0.3)), 0, 0)
+    P['tail'] = (0.3 + 0.12 * power * math.sin(w * (phi - 0.3)), 0, 0)
     for s in ('L', 'R'):
         P['thigh.' + s] = mix((0.25 + 0.05 * bob, 0, 0), (0.9, 0, 0), tuck)
         P['shin.' + s] = mix((-0.2 - 0.05 * bob, 0, 0), (-1.2, 0, 0), tuck)

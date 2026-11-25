@@ -5,3 +5,6 @@ renders/batch.log
 renders/v2frames/
 renders/*.log
 renders/_v2*
+renders/*_frames/
+renders/run_fox.sh
+renders/fox_videos.done

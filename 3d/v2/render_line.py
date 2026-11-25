@@ -156,4 +156,5 @@ def main():
             print('WROTE', bpy.context.scene.render.filepath, round(time.time() - t0))
 
 
-main()
+if __name__ == '__main__':
+    main()

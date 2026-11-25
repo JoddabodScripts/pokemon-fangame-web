@@ -89,6 +89,17 @@
     }
   }
 
+  // five-pointed star (outer radius R, inner r) with a lighter center pixel
+  function star(p, cx, cy, R, r, col, mid) {
+    const pts = [];
+    for (let k = 0; k < 10; k++) {
+      const a = -Math.PI / 2 + (k * Math.PI) / 5, rr = k % 2 ? r : R;
+      pts.push([cx + Math.cos(a) * rr, cy + Math.sin(a) * rr]);
+    }
+    p.poly(pts, col);
+    p.px(cx, cy, mid);
+  }
+
   // ---------- Pokemon sprites ----------
   // All face left (toward the player's side when shown as a wild Pokemon).
   const DRAW = {
@@ -429,6 +440,90 @@
       // snowflake eye + brow
       p.circ(21, 12, 3, '#cfeeff'); p.flake5(21, 12, '#1e5ab8');
       p.line(17, 8, 25, 10, '#1c2a4a');
+    },
+    twinkit(p) {
+      // fox kit with huge ears and a glowing star on its tail
+      const g = '#f0b14e', gd = '#c9832e', gl = '#ffd78a', c = '#fff3dc', cd = '#e8d8b8', n = '#252b66', li = '#b7a2ff';
+      // tail curling up behind, cream puff and star
+      p.ell3(35, 33, 4, 6, gd, g, gl); p.ell3(37, 26, 4, 4, gd, g, gl); p.ell(37, 22, 3, 3, c); p.px(36, 21, '#fff');
+      star(p, 38, 15, 5, 2, '#ffb820', '#fff1a0');
+      // back legs and body
+      p.rect(31, 38, 3, 5, gd); p.rect(30, 42, 4, 2, n);
+      p.ell3(28, 36, 8, 6, gd, g, gl);
+      p.ell(25, 39, 5, 2, c); p.line(21, 41, 29, 41, cd);
+      // front legs with navy socks
+      p.rect(20, 38, 3, 4, g); p.rect(24, 38, 3, 4, gd); p.rect(19, 42, 4, 2, n); p.rect(24, 42, 3, 2, n);
+      // ears
+      p.poly([[11, 22], [8, 8], [18, 19]], gd); p.poly([[12, 20], [10, 11], [16, 19]], li); p.poly([[8, 8], [10, 13], [12, 12]], n);
+      p.poly([[18, 19], [23, 7], [26, 20]], g); p.poly([[20, 18], [23, 11], [24, 19]], li); p.poly([[23, 7], [22, 12], [25, 12]], n);
+      // big round head
+      p.ell3(18, 27, 9, 8, gd, g, gl);
+      p.ell(15, 31, 6, 3, c); p.ell(24, 31, 3, 2, c);
+      p.ell(10, 30, 3, 2, c); p.px(7, 29, n); p.px(8, 29, n);
+      p.px(10, 32, n); p.px(11, 33, n); p.px(12, 32, n);
+      // big shiny eye
+      p.rect(14, 23, 4, 5, n); p.px(14, 23, '#fff'); p.px(15, 23, '#fff'); p.px(17, 27, li); p.px(16, 27, '#7d6ee6');
+    },
+    glimmvix(p) {
+      // lean night-blue fox with two star-tipped tails
+      const b = '#2f3a86', bd = '#1d2358', bl = '#4a58b0', c = '#fff1d6', cd = '#e2d2b4', go = '#f2b24a', li = '#b7a2ff';
+      // two tails sweeping up
+      p.poly([[33, 30], [40, 24], [44, 14], [42, 10], [38, 18], [31, 27]], bd);
+      p.poly([[42, 10], [45, 13], [43, 17], [40, 14]], c);
+      p.poly([[32, 31], [42, 30], [46, 23], [44, 20], [39, 26], [31, 28]], b);
+      p.poly([[44, 20], [47, 22], [46, 26], [43, 24]], c);
+      star(p, 42, 7, 4, 2, '#ffb820', '#fff1a0'); star(p, 46, 18, 4, 2, '#ffb820', '#fff1a0');
+      // far legs
+      p.line(30, 36, 32, 43, bd, 2); p.line(15, 36, 15, 43, bd, 2); p.rect(30, 43, 4, 1, go); p.rect(14, 43, 3, 1, go);
+      // body
+      p.ell3(24, 31, 10, 6, bd, b, bl);
+      p.ell(21, 35, 7, 2, c); p.line(15, 37, 27, 37, cd);
+      // near legs with gold socks
+      p.line(17, 35, 18, 43, b, 2); p.line(28, 35, 29, 43, b, 2);
+      p.rect(17, 41, 3, 2, go); p.rect(28, 41, 3, 2, go); p.rect(15, 43, 5, 1, go); p.rect(27, 43, 5, 1, go);
+      // neck and chest bib
+      p.poly([[13, 24], [19, 22], [21, 31], [15, 33]], b); p.poly([[13, 25], [16, 25], [17, 33], [14, 32]], c);
+      // head and snout
+      p.ell3(14, 19, 6, 5, bd, b, bl);
+      p.poly([[9, 19], [2, 21], [3, 23], [10, 23]], c); p.poly([[9, 18], [3, 20], [9, 20]], b); p.px(2, 20, '#141633');
+      p.ell(14, 23, 4, 2, c);
+      // ears with gold tips and lilac inside
+      p.poly([[10, 15], [9, 4], [15, 13]], bd); p.poly([[11, 13], [10, 7], [13, 13]], li); p.poly([[9, 4], [9, 7], [11, 7]], go);
+      p.poly([[15, 14], [19, 3], [20, 15]], b); p.poly([[16, 13], [19, 7], [19, 14]], li); p.poly([[19, 3], [18, 6], [20, 6]], go);
+      // forehead star and almond eye
+      star(p, 14, 15, 2, 1, '#ffb820', '#ffb820');
+      p.poly([[9, 18], [13, 17], [12, 20]], '#141633'); p.px(11, 18, '#b48cff'); p.px(10, 18, '#fff');
+    },
+    novalynx(p) {
+      // big night lynx: glowing spots, gold ear tufts, one long star-tipped tail
+      const b = '#252c6e', bd = '#161a46', bl = '#3c3f96', c = '#fff0d4', cd = '#e0cca8', go = '#f2ad42', gl = '#ffd36a';
+      // tail
+      p.poly([[36, 28], [42, 22], [45, 12], [43, 8], [40, 14], [35, 24]], b);
+      p.poly([[43, 8], [46, 11], [45, 15], [42, 13]], c); p.line(38, 22, 42, 14, gl);
+      star(p, 44, 5, 5, 2, '#ffb820', '#fff1a0');
+      // far legs
+      p.line(34, 36, 36, 44, bd, 3); p.line(15, 36, 15, 44, bd, 3); p.rect(34, 44, 5, 2, go); p.rect(13, 44, 4, 2, go);
+      // body with glowing spots
+      p.ell3(26, 30, 13, 8, bd, b, bl);
+      p.ell(23, 36, 9, 2, c); p.line(15, 38, 31, 38, cd);
+      for (const [x, y] of [[24, 25], [30, 24], [35, 28], [27, 29], [20, 26], [33, 33]]) { p.px(x, y, gl); p.px(x + 1, y, '#fff6c8'); }
+      // near legs, heavy paws
+      p.line(18, 35, 18, 44, b, 3); p.line(30, 35, 31, 44, b, 3);
+      p.rect(16, 42, 5, 3, go); p.rect(29, 42, 5, 3, go);
+      // neck, cream bib and ruff
+      p.poly([[12, 22], [20, 20], [22, 32], [14, 34]], b); p.poly([[11, 24], [16, 24], [17, 34], [13, 33]], c);
+      p.poly([[17, 21], [24, 26], [20, 27]], c); p.poly([[17, 24], [23, 30], [19, 30]], c);
+      // head and short muzzle
+      p.ell3(14, 17, 7, 6, bd, b, bl);
+      p.ell(8, 20, 4, 3, c); p.px(4, 19, '#11122b'); p.px(5, 19, '#11122b'); p.line(6, 22, 9, 22, '#11122b');
+      p.ell(15, 22, 4, 2, c);
+      // tall ears with glowing tufts
+      p.poly([[9, 13], [7, 2], [14, 11]], bd); p.poly([[10, 11], [9, 5], [12, 11]], '#a995ff');
+      p.poly([[15, 12], [19, 1], [21, 13]], b); p.poly([[16, 11], [19, 5], [20, 12]], '#a995ff');
+      p.line(7, 2, 6, 0, gl); p.line(19, 1, 20, 0, gl);
+      // forehead star, heavy brow, gold slit eye
+      star(p, 15, 12, 3, 1, '#ffb820', '#ffb820');
+      p.line(8, 14, 13, 15, bd); p.rect(10, 16, 3, 2, '#ffd24a'); p.px(11, 16, '#11122b'); p.px(11, 17, '#11122b'); p.px(12, 16, '#fff');
     },
     legend_freeze(p) {
       // faceted ice crystal with a question mark (design not made yet)

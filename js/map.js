@@ -11,12 +11,12 @@
 
   // Wild Pokemon per area: [speciesKey, weight]
   const ZONES = {
-    center: { name: 'Star Fields',          lv: [2, 5],   mons: [['peeplet', 40], ['swampidile', 20], ['flamber', 20], ['slimean', 20]] },
-    arm0:   { name: 'Route 1 (North)',      lv: [3, 7],   mons: [['swampidile', 45], ['peeplet', 35], ['slimean', 20]] },
+    center: { name: 'Star Fields',          lv: [2, 5],   mons: [['peeplet', 40], ['swampidile', 20], ['flamber', 20], ['slimean', 20], ['twinkit', 15]] },
+    arm0:   { name: 'Route 1 (North)',      lv: [3, 7],   mons: [['swampidile', 45], ['peeplet', 35], ['slimean', 20], ['twinkit', 20]] },
     arm1:   { name: 'Route 2 (East)',       lv: [6, 11],  mons: [['flamber', 50], ['peeplet', 30], ['featherdash', 20]] },
     arm2:   { name: 'Route 3 (South-East)', lv: [10, 16], mons: [['slimean', 45], ['slimarton', 25], ['featherdash', 30]] },
-    arm3:   { name: 'Route 4 (South-West)', lv: [14, 20], mons: [['swamporiaer', 35], ['flamezion', 30], ['slimarton', 35]] },
-    arm4:   { name: 'Route 5 (West)',       lv: [18, 26], mons: [['featherdash', 40], ['swamporiaer', 20], ['flamezion', 20], ['fiercebird', 8], ['slimarton', 12]] },
+    arm3:   { name: 'Route 4 (South-West)', lv: [14, 20], mons: [['swamporiaer', 35], ['flamezion', 30], ['slimarton', 35], ['glimmvix', 15]] },
+    arm4:   { name: 'Route 5 (West)',       lv: [18, 26], mons: [['featherdash', 40], ['swamporiaer', 20], ['flamezion', 20], ['fiercebird', 8], ['slimarton', 12], ['glimmvix', 10]] },
   };
 
   function mulberry32(a) {

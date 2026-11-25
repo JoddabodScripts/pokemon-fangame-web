@@ -22,10 +22,10 @@ The game saves to your browser when you heal at a Pokemon Center, when you pick 
 
 ## What's in it
 
-- 12 Pokemon from the notebook (001 to 012) and the 2 placeholder legendaries. The bird line turns icy as it evolves: Peeplet is Normal/Flying, Featherdash and Freezer Flock are Ice/Flying.
+- 12 Pokemon from the notebook (001 to 012), the 2 placeholder legendaries, and one new line that isn't in the notebook: Twinkit, Glimmvix and Novalynx (013 to 015), a Normal-type fox line with glowing stars on its tails. The bird line turns icy as it evolves: Peeplet is Normal/Flying, Featherdash and Freezer Flock are Ice/Flying.
 - Six areas: Star City in the middle and a route plus town on each point of the star. Each route has different wild Pokemon and levels.
 - Battles with type matchups, catching, potions, switching, EXP, level ups, new moves and evolution.
-- Signature moves. Flames of Health (Blazian) and Slime Split (Slimontoon) work the way the notebook describes them. Bog Chomp (Swampest) and Fierce Blast (Freezer Flock) are made up for now.
+- Signature moves. Flames of Health (Blazian) and Slime Split (Slimontoon) work the way the notebook describes them. Bog Chomp (Swampest) and Brittle Blast (Freezer Flock) are made up for now. Starfall Pounce (Novalynx) hits for 85 and raises its Speed.
 - Unique Forms, the notebook's featured element. About 1 in 64 wild Pokemon is a Unique Form: different colors, 20% higher stats and a star next to its name.
 - Pokedex with base stats, totals and signature move text. Press A on an entry's stats page to read its lore.
 

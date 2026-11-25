@@ -66,6 +66,11 @@
     brittleblast:{ name: 'Brittle Blast', type: 'Ice', cat: 'phys', power: 90, acc: 95, sig: true,
                    effect: { target: 'foe', stat: 'def', stages: -1, chance: 100 },
                    desc: 'A freezing dive that leaves the target brittle. 90 power, 95 accuracy. Lowers the target\'s Defense.' },
+
+    headbutt:    { name: 'Headbutt',     type: 'Normal', cat: 'phys', power: 70, acc: 100 },
+    starfallpounce: { name: 'Starfall Pounce', type: 'Normal', cat: 'phys', power: 85, acc: 95, sig: true,
+                   effect: { target: 'self', stat: 'spe', stages: 1, chance: 100 },
+                   desc: 'Leaps high and comes down like a falling star. 85 power, 95 accuracy. Raises the user\'s Speed.' },
   };
 
   const SPECIES = {};
@@ -144,6 +149,21 @@
   S('fiercebird', 12, 'Freezer Flock', ['Ice', 'Flying'], [100, 110, 80, 90, 80, 80],
     { rate: 45, xp: 216, learn: [...snowLearn, [30, 'icebeam'], [34, 'brittleblast']], sig: 'brittleblast', height: 550,
       lore: 'By the time it is fully grown, every feather has turned to packed snow. It nests on the frozen cliffs above Galecrest. Each bead on its necklace is a chunk of ice it took from a rival it beat. When it dives, the air around it freezes so hard that whatever it hits cracks like thin ice.' });
+
+  // Star fox line (013-015). A new line, not from the notebook.
+  // Balance: totals 310 / 440 / 530, just under the bird line. Normal moves hit everything for
+  // neutral damage and nothing resists them, so this line has no bad matchups but no great ones.
+  // In a simulated round robin against the other lines at the same stage it wins about 30%.
+  const starLearn = [[1, 'scratch'], [1, 'growl'], [5, 'quickattack'], [10, 'leer'], [15, 'headbutt']];
+  S('twinkit', 13, 'Twinkit', ['Normal'], [50, 60, 45, 35, 45, 75],
+    { evo: ['glimmvix', 18], rate: 190, xp: 55, learn: starLearn, height: 30,
+      lore: 'A fox kit that naps all day in the tall grass of the Star Fields. At night the star on the tip of its tail lights up. A lost Twinkit waves its tail over the grass until its family spots the light and comes to get it.' });
+  S('glimmvix', 14, 'Glimmvix', ['Normal'], [70, 95, 65, 45, 65, 100],
+    { evo: ['novalynx', 32], rate: 90, xp: 130, learn: [...starLearn, [24, 'iceshard']], height: 90,
+      lore: 'Its tail splits in two as it grows, and both tips glow. It hunts at dusk by flicking the lights through the grass. Small Pokemon creep over to see what is shining, and by then it is already too late.' });
+  S('novalynx', 15, 'Novalynx', ['Normal'], [85, 120, 75, 55, 75, 120],
+    { rate: 45, xp: 215, learn: [...starLearn, [24, 'iceshard'], [35, 'starfallpounce']], sig: 'starfallpounce', height: 160,
+      lore: 'The dark fur on its back is dotted with spots that glow in the same pattern as the stars overhead. It runs so fast on clear nights that people only see a streak of light. Old folks in Star City say that is where the stories about shooting stars came from.' });
 
   // Version legendaries
   S('legend_freeze', 'L', '???', ['Ice'], [100, 90, 100, 130, 110, 100],

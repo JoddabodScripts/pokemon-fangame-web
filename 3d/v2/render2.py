@@ -376,6 +376,8 @@ if __name__ == '__main__':
                      ((-3.4, -0.6, 4.0), (0, -0.6, 4.0), 50, 'h3')]
         if mode == 'tpose':
             shots = [((0, -16, 3.0), (0, 0, 2.6), 32, 'a'), ((-9, -11, 4.5), (0, 0, 2.6), 32, 'b')]
+        # shots were framed for the original size: pull back by the model's scale
+        shots = [(tuple(v * ff.SIZE for v in loc), tuple(v * ff.SIZE for v in tgt), lens, tag) for loc, tgt, lens, tag in shots]
         for loc, tgt, lens, tag in shots:
             camera(loc, tgt, lens, dof=4.0 if tag == 'b' else None)
             bpy.context.scene.render.filepath = os.path.join(OUT, f'_v2_{mode}_{tag}.png')

@@ -17,6 +17,7 @@ T = dict(throw=0, open=26, appear=30, land=54, idle=84, advance=180, charge=236,
          back=300, hit=336, recover=364, end=420)
 OPP = V((5.5, -13.0, 0.0))
 HOVER = V((0, 0, 0.7))
+S = ff.SIZE           # model scale: framing and effects that sit on the body grow with it
 rnd = random.Random(11)
 
 
@@ -247,8 +248,8 @@ def animate(rig):
     for f, s in [(0, 0.0), (T['appear'], 0.0), (T['appear'] + 8, 0.55), (T['appear'] + 15, 1.08), (T['appear'] + 20, 0.97), (T['land'], 1.0)]:
         root.scale = (s, s, s)
         root.keyframe_insert('scale', frame=f)
-    glow = sphere_obj('appear_glow', 1.0, mat_glow('appearm', '#e8f8ff', 3, alpha=0.18), V((0, 0, 3.0)))
-    scale_keys(glow, [(0, 0.0), (T['appear'], 0.0), (T['appear'] + 6, (2.2, 1.4, 2.4)), (T['appear'] + 14, 0.0)])
+    glow = sphere_obj('appear_glow', 1.0, mat_glow('appearm', '#e8f8ff', 3, alpha=0.18), V((0, 0, 3.0 * S)))
+    scale_keys(glow, [(0, 0.0), (T['appear'], 0.0), (T['appear'] + 6, (2.2 * S, 1.4 * S, 2.4 * S)), (T['appear'] + 14, 0.0)])
 
     def pos_at(f):
         """Root path: hover in place, advance, rise, dive, return, recoil."""
@@ -262,7 +263,7 @@ def animate(rig):
             t = smooth((f - T['charge']) / (T['dive'] - T['charge']))
             return base + V((0, 0.6 * t, 2.6 * t))
         top = base + V((0, 0.6, 2.6))
-        tgt = OPP + V((-1.6, 4.6, 1.9))      # rig origin is at the feet: the head lands ~4 m ahead
+        tgt = OPP + V((-1.6, 4.6, 1.9)) * S  # rig origin is at the feet: the head lands ~4*S m ahead
         if f < T['impact']:
             t = ((f - T['dive']) / (T['impact'] - T['dive'])) ** 1.6
             return top.lerp(tgt, t)
@@ -391,15 +392,15 @@ def animate(rig):
         rr = rnd.uniform(2.6, 3.8)
         zz = rnd.uniform(-0.8, 1.6)
         for f in range(T['charge'], T['impact'] + 3, 2):
-            c = pos_at(f) + V((0, 0, 3.2))
+            c = pos_at(f) + V((0, 0, 3.2 * S))
             if f < T['dive']:
                 t = (f - T['charge']) / (T['dive'] - T['charge'])
                 a = a0 + t * 7.0
-                r = rr * (1.3 - 0.5 * t)
+                r = rr * S * (1.3 - 0.5 * t)
                 p = c + V((math.cos(a) * r, math.sin(a) * r, zz * (1 - 0.5 * t)))
             else:
                 t = (f - T['dive']) / (T['impact'] - T['dive'])
-                start = pos_at(T['dive']) + V((0, 0, 3.2)) + V((math.cos(a0 + 7) * rr * 0.8, math.sin(a0 + 7) * rr * 0.8, zz * 0.5))
+                start = pos_at(T['dive']) + V((0, 0, 3.2 * S)) + V((math.cos(a0 + 7) * rr * 0.8, math.sin(a0 + 7) * rr * 0.8, zz * 0.5)) * S
                 p = start.lerp(OPP + V((rnd.uniform(-1.5, 1.5), rnd.uniform(-1.5, 1.5), rnd.uniform(0.2, 1.5))), min(1.0, t * 1.15))
             loc_keys(o, [(f, p)])
             o.rotation_euler = (f * 0.2 + i, f * 0.13, a0)
@@ -462,7 +463,7 @@ def animate(rig):
         vs, fs, cs, uvs = kit.feather_geo(0.22, 0.1, stops=[(0, ff.SNOW), (1, ff.FROST)], nl=5, nw=3)
         mb.add(vs, fs, cs, uvs)
         o = mb.build(f'loose{i}', fm)
-        c = HOVER + V((0, 0, 2.8))
+        c = HOVER + V((0, 0, 2.8 * S))
         out = c + V((rnd.uniform(-2.5, 2.5), rnd.uniform(-1.5, 2.5), rnd.uniform(0.5, 2.2)))
         loc_keys(o, [(T['hit'], c), (T['hit'] + 12, out), (T['hit'] + 50, out + V((rnd.uniform(-0.5, 0.5), 0, -3.2)))])
         o.rotation_euler = (0, 0, 0)
@@ -501,13 +502,18 @@ def camera_moves(pos_at):
         (T['charge'], (-3.6, -11.5, 1.1), (0, -2.0, 4.6), 26, True),          # low hero angle for the wind-up
         (T['dive'] - 2, (-3.0, -11.0, 1.0), (0, -1.9, 6.2), 26, False),
         (T['dive'], (-15.5, -8.0, 2.4), (1.6, -5.6, 2.8), 28, True),         # wide side view: the dive streaks across
-        (T['back'] + 4, (-15.0, -9.0, 2.6), (2.4, -6.8, 2.6), 28, False),
+        (T['back'] + 4, (-16.5, -9.5, 3.0), (2.0, -6.4, 4.6), 22, False),     # wider: the bigger bird pulls up high
         (T['back'] + 8, (-3.4, -10.6, 1.4), (1.0, -3.4, 5.2), 26, True),      # back home, braced for the hit
         (T['back'] + 24, (-3.0, -9.8, 1.6), (0.3, -1.0, 4.0), 28, False),
         (T['hit'], (-2.4, -9.2, 1.8), (0, -0.2, 3.5), 32, False),
         (T['recover'], (-2.6, -9.0, 1.7), (0, 0, 3.5), 32, False),
         (T['end'], (-3.6, -8.4, 1.0), (0, 0, 3.8), 28, False),
     ]
+    # the bird is S times its original size: pull the home shots back by the same factor.
+    # The dive shots frame the opponent's side and stay put.
+    wide = {T['dive'], T['back'] + 4}
+    shots = [(f, loc, t, lens, cut) if f in wide or f < T['land'] else
+             (f, tuple(v * S for v in loc), tuple(v * S for v in t), lens, cut) for f, loc, t, lens, cut in shots]
     prev = None
     for f, loc, t, lens, cut in shots:
         if cut and prev:

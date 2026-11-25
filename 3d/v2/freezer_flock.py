@@ -19,6 +19,7 @@ import freezer_flock_detailed as D
 BONES, SEG, SIDE = D.BONES, D.SEG, D.SIDE
 SNOW, SNOW2, FROST, ICE1, ICE2, ICE3, DEEP, NAVY, WHITE = D.SNOW, D.SNOW2, D.FROST, D.ICE1, D.ICE2, D.ICE3, D.DEEP, D.NAVY, D.WHITE
 HEAD = D.HEAD
+SIZE = 1.25          # display scale of the finished model (the team asked for +25%)
 EYES, LOOK = D.EYES, D.LOOK
 crystal_geo = D.crystal_geo
 pose_bones, display_pose = D.pose_bones, D.display_pose
@@ -453,4 +454,6 @@ def build(steps=None):
             o.parent = arm
         elif o.type == 'MESH' and o.parent is None:
             o.parent = root
+    # the team asked for a bigger bird: everything hangs off the rig, so scaling it scales the whole model
+    arm.scale = (SIZE, SIZE, SIZE)
     return dict(root=root, arm=arm, body=body)

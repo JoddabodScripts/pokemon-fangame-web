@@ -17,6 +17,47 @@ STIFF = 5.0
 ISO = math.sqrt(1 - (0.6 / STIFF) ** (1 / 3))      # where a lone element's surface sits, as a fraction of its size
 
 
+def iso(stiff):
+    """Where a lone metaball element's surface sits, as a fraction of its size."""
+    return math.sqrt(1 - (0.6 / stiff) ** (1 / 3))
+
+
+def catmull(pts, n):
+    """n points along a Catmull-Rom spline through pts (tuples of any length)."""
+    P = [np.array(p, dtype=float) for p in pts]
+    P = [P[0] * 2 - P[1]] + P + [P[-1] * 2 - P[-2]]
+    out = []
+    segs = len(P) - 3
+    for i in range(n):
+        t = i / (n - 1) * segs
+        k = min(int(t), segs - 1)
+        u = t - k
+        p0, p1, p2, p3 = P[k], P[k + 1], P[k + 2], P[k + 3]
+        out.append(0.5 * (2 * p1 + (-p0 + p2) * u + (2 * p0 - 5 * p1 + 4 * p2 - p3) * u * u + (-p0 + 3 * p1 - 3 * p2 + p3) * u ** 3))
+    return out
+
+
+def chain(pts, normal=(0, 0, 1), spacing=0.55, stiff=2.6, **kw):
+    """A smooth tapered form: pts are (x, y, z, rx, rz). Many small overlapping ellipsoids follow a spline
+    through them, so limbs, necks and spines taper evenly and melt into each other."""
+    L = sum(np.linalg.norm(np.array(a[:3]) - np.array(b[:3])) for a, b in zip(pts, pts[1:]))
+    rmin = min(min(p[3], p[4]) for p in pts)
+    n = max(3, int(L / (rmin * spacing)) + 2)
+    S = catmull(pts, n)
+    out = []
+    for i, p in enumerate(S):
+        a = S[max(0, i - 1)][:3]
+        b = S[min(n - 1, i + 1)][:3]
+        d = V(b - a)
+        if d.length < 1e-6:
+            d = V((0, 1, 0))
+        nm = V(normal)
+        if abs(d.normalized().dot(nm.normalized())) > 0.95:
+            nm = V((1, 0, 0))
+        out.append(El(V(p[:3]), (p[3], max(p[3], p[4]) * 0.9, p[4]), frame(d, nm), stiff=stiff, **kw))
+    return out
+
+
 class El:
     """One metaball ellipsoid: center, semi-axes (x, y = long axis, z), orientation, paint, skin weights.
 
@@ -24,7 +65,9 @@ class El:
     or a function (q) -> (rgb array, glow array) of the vertex's local coords, scaled so the surface is ~1.
     """
 
-    def __init__(self, co, size, rot=None, paint='body', stops=None, color=None, glow=0.0, weights='skin', probe=True):
+    def __init__(self, co, size, rot=None, paint='body', stops=None, color=None, glow=0.0, weights='skin', probe=True,
+                 stiff=STIFF):
+        self.stiff = stiff
         self.co = V(co)
         self.size = V(size)
         self.R = rot if rot is not None else Matrix.Identity(3)
@@ -53,7 +96,7 @@ def mirror(E):
     for e in E:
         if e.co.x > 1e-4:
             m = El(V((-e.co.x, e.co.y, e.co.z)), e.size, F @ e.R @ F, e.paint, e.stops, e.color, e.glow,
-                   _flip_w(e.weights), e.probe)
+                   _flip_w(e.weights), e.probe, e.stiff)
             out.append(m)
     return out
 
@@ -85,8 +128,8 @@ def metaballs(name, E, resolution=0.02):
         el = mb.elements.new(type='ELLIPSOID')
         el.co = e.co
         el.radius = 1.0
-        el.stiffness = STIFF
-        sz = e.size / ISO
+        el.stiffness = e.stiff
+        sz = e.size / iso(e.stiff)
         el.size_x, el.size_y, el.size_z = sz
         el.rotation = e.R.to_quaternion()
     mo = bpy.data.objects.new(name + '_mbo', mb)
@@ -330,7 +373,7 @@ def star_geo(R, r_in, depth, pts=5, rings=6, rot=0.0):
     return vs, fs
 
 
-def star(arm, prefix, loc, R, name, bone, face=(0, -1, 0.15), depth=0.07, color='#ffa914', emit=0.6, spin=0.0):
+def star(arm, prefix, loc, R, name, bone, face=(0, -1, 0.15), depth=0.07, color='#ff9d0a', emit=0.35, spin=0.0):
     """A glowing puffy star set onto the body, rigidly weighted to one bone."""
     import bmesh
     vs, fs = star_geo(R, R * 0.47, depth, rot=spin)

@@ -1,18 +1,18 @@
 """Glimmvix (014), Normal. Twinkit grown into a lean dusk fox: the coat turns night blue, the tail
 splits in two, and both tips carry a glowing star. A small star shows on its forehead.
 
-Same build as Twinkit. Faces -Y, stands on z = 0, about 2.2 tall to the ear tips at design scale.
+The body comes from quad.py (spine, shoulders, thighs, jointed legs). Faces -Y, stands on z = 0,
+about 2.2 tall to the ear tips at design scale.
 """
-import math
-
 import bpy
 import numpy as np
 from mathutils import Vector as V
 
 import kit
 from kit import srgb as C
+import quad
 import sv
-from sv import El, ell, frame, tube
+from sv import El, ell, frame
 
 KEY = 'glimmvix'
 P_ = 'glx_'
@@ -26,34 +26,22 @@ GOLD = C('#f2b24a')
 LILAC = C('#b7a2ff')
 INK = C('#141633')
 
-HEAD = V((0, -0.64, 1.62))
+HEAD = V((0, -0.7, 1.58))
 LOOK = {s: V((sx * 0.62, -1, 0.04)).normalized() for s, sx in SIDE.items()}
-TAIL = {s: [(0, 0.66, 1.0), (sx * 0.08, 0.92, 1.12), (sx * 0.26, 1.12, 1.36), (sx * 0.38, 1.2, 1.66), (sx * 0.4, 1.12, 1.9)]
+TAIL = {s: [(sx * 0.0, 0.66, 1.02, 0.075), (sx * 0.06, 0.86, 1.1, 0.12), (sx * 0.2, 1.06, 1.3, 0.16),
+            (sx * 0.32, 1.16, 1.58, 0.16), (sx * 0.36, 1.12, 1.84, 0.12), (sx * 0.36, 1.06, 1.96, 0.07)]
         for s, sx in SIDE.items()}
 
-
-def bones():
-    B = [('root', (0, 0, 0), (0, 0, 0.3), None, False),
-         ('hips', (0, 0.5, 0.95), (0, 0.0, 0.95), 'root', True),
-         ('chest', (0, 0.0, 0.95), (0, -0.36, 1.05), 'hips', True),
-         ('neck', (0, -0.36, 1.05), (0, -0.56, 1.42), 'chest', True),
-         ('head', (0, -0.56, 1.42), (0, -0.64, 1.86), 'neck', True)]
-    for s, sx in SIDE.items():
-        t = TAIL[s]
-        B += [('ear.' + s, (sx * 0.15, -0.6, 1.8), (sx * 0.33, -0.56, 2.22), 'head', True),
-              ('arm.' + s, (sx * 0.16, -0.34, 0.88), (sx * 0.17, -0.37, 0.44), 'chest', True),
-              ('hand.' + s, (sx * 0.17, -0.37, 0.44), (sx * 0.17, -0.47, 0.05), 'arm.' + s, True),
-              ('thigh.' + s, (sx * 0.17, 0.46, 0.92), (sx * 0.18, 0.6, 0.55), 'hips', True),
-              ('shin.' + s, (sx * 0.18, 0.6, 0.55), (sx * 0.18, 0.56, 0.12), 'thigh.' + s, True),
-              ('foot.' + s, (sx * 0.18, 0.56, 0.12), (sx * 0.18, 0.44, 0.04), 'shin.' + s, True),
-              ('tail0.' + s, t[0], t[1], 'hips', True),
-              ('tail1.' + s, t[1], t[3], 'tail0.' + s, True),
-              ('tail2.' + s, t[3], t[4], 'tail1.' + s, True)]
-    return B
-
-
-def seg(B):
-    return {n: (V(h), V(t)) for n, h, t, p, d in B if d}
+SPEC = dict(
+    spine=[(-0.52, 1.03, 0.2, 0.24), (-0.32, 1.04, 0.26, 0.31), (-0.08, 0.99, 0.23, 0.27), (0.18, 0.95, 0.19, 0.22),
+           (0.42, 0.99, 0.24, 0.26), (0.62, 1.01, 0.2, 0.21)],
+    neck=[(-0.44, 1.12, 0.17), (-0.56, 1.32, 0.15), (-0.64, 1.47, 0.15)],
+    head=(tuple(HEAD), (0.33, 0.31, 0.29)),
+    front=[(0.17, -0.34, 0.98, 0.12), (0.18, -0.26, 0.62, 0.08), (0.18, -0.36, 0.2, 0.062), (0.18, -0.38, 0.08, 0.06)],
+    back=[(0.17, 0.44, 0.96, 0.15), (0.19, 0.3, 0.6, 0.095), (0.19, 0.62, 0.3, 0.065), (0.19, 0.56, 0.08, 0.06)],
+    paw=(0.085, 0.12, 0.06),
+    tails=[TAIL['L'], TAIL['R']],
+)
 
 
 # ------------------------------------------------------------------ paint
@@ -74,7 +62,6 @@ def solid(c):
 
 
 def snout_paint(q, P, bc, bg):
-    """Cream snout, navy on the bridge, a small closed smile."""
     n = len(q)
     col = np.tile(np.array(CREAM), (n, 1))
     bridge = sv.smoothstep(0.35, 0.65, q[:, 2]) * sv.smoothstep(0.55, 0.3, np.abs(q[:, 0]))
@@ -89,16 +76,18 @@ def snout_paint(q, P, bc, bg):
 
 def leg_paint(q, P, bc, bg):
     """Night-blue legs with gold socks."""
-    sock = sv.smoothstep(0.3, 0.24, P[:, 2])
-    col = np.tile(np.array(NIGHT), (len(q), 1))
+    # continue the body paint at the top of the leg so the belly color doesn't break into patches
+    top = sv.smoothstep(0.62, 0.8, P[:, 2])[:, None]
+    col = np.array(NIGHT) + (bc - np.array(NIGHT)) * top
+    sock = sv.smoothstep(0.3, 0.22, P[:, 2])
     col += (np.array(GOLD) - col) * sock[:, None]
     return col, np.zeros(len(q))
 
 
 def tail_paint(q, P, bc, bg):
-    tips = np.array([TAIL[s][-1] for s in SIDE])
+    tips = np.array([TAIL[s][-1][:3] for s in SIDE])
     d = np.min(np.linalg.norm(P[:, None, :] - tips[None], axis=2), axis=1)
-    t = sv.smoothstep(0.42, 0.26, d)
+    t = sv.smoothstep(0.36, 0.22, d)
     col = np.tile(np.array(NIGHT), (len(q), 1))
     col += (np.array(CREAM) - col) * t[:, None]
     return col, np.zeros(len(q))
@@ -108,71 +97,41 @@ def body_paint(P):
     n = len(P)
     ss = sv.smoothstep
     col = np.tile(np.array(NIGHT), (n, 1))
-    # cream underside: belly, chest bib, throat and the lower face
-    under = ss(0.8, 0.72, P[:, 2]) * ss(0.75, 0.6, P[:, 1])
-    bib = ss(-0.48, -0.58, P[:, 1]) * ss(0.24, 0.14, np.abs(P[:, 0])) * ss(1.5, 1.38, P[:, 2])
-    throat = ss(-0.5, -0.62, P[:, 1]) * ss(0.16, 0.08, np.abs(P[:, 0])) * ss(1.1, 1.2, P[:, 2]) * ss(1.55, 1.45, P[:, 2])
-    face = ss(-0.66, -0.76, P[:, 1]) * ss(1.58, 1.5, P[:, 2])
-    cheek = ss(0.18, 0.26, np.abs(P[:, 0])) * ss(-0.5, -0.62, P[:, 1]) * ss(1.6, 1.5, P[:, 2]) * ss(1.35, 1.42, P[:, 2])
-    m = np.clip(under + bib + throat + face + cheek, 0, 1)
+    belly = quad.underside(P, SPEC, frac=0.3, soft=0.14)
+    bib = ss(-0.5, -0.66, P[:, 1]) * ss(0.26, 0.14, np.abs(P[:, 0])) * ss(1.45, 1.3, P[:, 2]) * ss(0.78, 0.9, P[:, 2])
+    throat = ss(-0.58, -0.72, P[:, 1]) * ss(0.13, 0.05, np.abs(P[:, 0])) * ss(1.1, 1.25, P[:, 2]) * ss(1.55, 1.45, P[:, 2])
+    face = ss(-0.74, -0.84, P[:, 1]) * ss(1.56, 1.48, P[:, 2])
+    cheek = ss(0.16, 0.24, np.abs(P[:, 0])) * ss(-0.56, -0.68, P[:, 1]) * ss(1.58, 1.48, P[:, 2]) * ss(1.36, 1.42, P[:, 2])
+    m = np.clip(belly + bib + throat + face + cheek, 0, 1)
     col += (np.array(CREAM) - col) * m[:, None]
-    # darker saddle along the spine
-    back = ss(0.12, 0.02, np.abs(P[:, 0])) * ss(1.1, 1.2, P[:, 2]) * ss(-0.4, -0.2, P[:, 1]) * ss(0.7, 0.55, P[:, 1])
-    col += (np.array(NIGHT_D) - col) * (back * 0.8)[:, None]
     return col, np.zeros(n)
 
 
 # ------------------------------------------------------------------ shapes
 def elements():
-    E = []
-    # lean torso: deep chest, tucked belly, rounded hips
-    E.append(ell((0, -0.28, 0.98), (0.3, 0.32, 0.33), (0.15, 0, 0)))
-    E.append(ell((0, 0.1, 0.95), (0.26, 0.42, 0.25)))
-    E.append(ell((0, 0.46, 0.98), (0.28, 0.28, 0.28)))
-    # neck and head with a fox snout
-    E += tube([(0, -0.36, 1.1), (0, -0.52, 1.36), (0, -0.6, 1.5)], [0.18, 0.15, 0.15], normal=(0, -1, 0))
-    E.append(ell(tuple(HEAD), (0.35, 0.32, 0.31)))
-    E.append(ell((0, -0.6, 1.8), (0.25, 0.22, 0.14)))
-    E.append(ell((0, -0.96, 1.5), (0.14, 0.21, 0.115), (0.25, 0, 0), paint=snout_paint))
-    E.append(ell((0, -1.15, 1.53), (0.05, 0.04, 0.04), paint='solid', color=INK, probe=False))
-    for s, sx in SIDE.items():
-        if sx < 0:
-            continue
-        root = V((sx * 0.17, -0.6, 1.84))
-        d = V((sx * 0.42, 0.08, 1)).normalized()
-        E.append(El(root + d * 0.24, (0.16, 0.27, 0.058), frame(d, (sx * 0.1, -1, 0.15)), paint=ear_paint,
-                    weights={'ear.' + s: 1.0}))
-        E.append(El(root + d * 0.47, (0.065, 0.12, 0.04), frame(d, (sx * 0.1, -1, 0.15)), paint=solid(GOLD),
-                    weights={'ear.' + s: 1.0}))
-        # cheek fur sweeping back along the jaw
-        for rt, dd, L in (((0.24, -0.66, 1.52), (0.55, 0.6, -0.35), 0.17), ((0.22, -0.6, 1.44), (0.45, 0.6, -0.65), 0.14)):
-            dv = V((sx * dd[0], dd[1], dd[2])).normalized()
-            E.append(El(V((sx * rt[0], rt[1], rt[2])) + dv * L * 0.45, (0.07, L, 0.045), frame(dv, (sx * 0.4, -0.6, 0.3)),
-                        paint='solid', color=CREAM))
-        # long front legs
-        E += tube([(sx * 0.15, -0.32, 0.9), (sx * 0.17, -0.36, 0.55), (sx * 0.17, -0.38, 0.12)], [0.12, 0.082, 0.072],
-                  paint=leg_paint)
-        E.append(ell((sx * 0.17, -0.46, 0.055), (0.09, 0.13, 0.065), paint=leg_paint, weights={'hand.' + s: 1.0}))
-        # back legs: thigh, hock bent back, paw
-        E.append(ell((sx * 0.16, 0.48, 0.8), (0.17, 0.27, 0.28), (0.35, 0, 0)))
-        E += tube([(sx * 0.18, 0.56, 0.62), (sx * 0.18, 0.62, 0.36), (sx * 0.18, 0.56, 0.11)], [0.1, 0.075, 0.07],
-                  paint=leg_paint)
-        E.append(ell((sx * 0.18, 0.48, 0.055), (0.09, 0.13, 0.065), paint=leg_paint, weights={'foot.' + s: 1.0}))
-        # one of the two tails
-        E += tube(TAIL[s], [0.08, 0.15, 0.18, 0.16, 0.1], flat=0.85, normal=(1, 0, 0), paint=tail_paint)
-    return sv.mirror(E)
+    E = quad.elements(SPEC, leg_paint, tail_paint=tail_paint)
+    side = []
+    # skull top and fox snout
+    E.append(ell((0, -0.66, 1.76), (0.24, 0.22, 0.14)))
+    E.append(El((0, -0.98, 1.5), (0.135, 0.22, 0.11), frame((0, -1, -0.28), (0, 0, 1)), paint=snout_paint, stiff=3.0))
+    E.append(ell((0, -1.17, 1.54), (0.05, 0.04, 0.04), paint='solid', color=INK, probe=False))
+    root = V((0.17, -0.66, 1.8))
+    d = V((0.42, 0.08, 1)).normalized()
+    side.append(El(root + d * 0.24, (0.16, 0.27, 0.058), frame(d, (0.1, -1, 0.15)), paint=ear_paint, weights={'ear.R': 1.0}))
+    side.append(El(root + d * 0.47, (0.065, 0.12, 0.04), frame(d, (0.1, -1, 0.15)), paint=solid(GOLD), weights={'ear.R': 1.0}))
+    # cheek fur lying back along the jaw
+    for rt, dd, L in (((0.24, -0.72, 1.5), (0.45, 0.75, -0.35), 0.17), ((0.21, -0.66, 1.42), (0.35, 0.75, -0.6), 0.14)):
+        dv = V(dd).normalized()
+        side.append(El(V(rt) + dv * L * 0.45, (0.07, L, 0.045), frame(dv, (0.6, -0.5, 0.3)), paint='solid', color=CREAM))
+    return E + sv.mirror(side)
 
 
-def radii():
-    r = dict(hips=0.34, chest=0.36, neck=0.24, head=0.42)
-    for s in 'LR':
-        r.update({'arm.' + s: 0.12, 'hand.' + s: 0.1, 'thigh.' + s: 0.2, 'shin.' + s: 0.1, 'foot.' + s: 0.09,
-                  'ear.' + s: 0.18, 'tail0.' + s: 0.14, 'tail1.' + s: 0.2, 'tail2.' + s: 0.16})
-    return r
+def extra_bones():
+    return [('ear.' + s, (sx * 0.17, -0.66, 1.8), (sx * 0.35, -0.62, 2.22), 'head', True) for s, sx in SIDE.items()]
 
 
 def eyes(arm, E):
-    hits = sv.probe_hit(E, [HEAD + LOOK[s] * 1.4 + V((0, 0, 0.0)) for s in SIDE], [-LOOK[s] for s in SIDE])
+    hits = sv.probe_hit(E, [HEAD + LOOK[s] * 1.4 for s in SIDE], [-LOOK[s] for s in SIDE])
     mb = kit.MeshBuilder()
     for (s, sx), hit in zip(SIDE.items(), hits):
         f = LOOK[s]
@@ -185,25 +144,30 @@ def eyes(arm, E):
 
 
 def display_pose(arm):
+    """Alert stance: head turned toward the viewer, right front paw lifted, tails swaying."""
     pb = arm.pose.bones
-    pb['head'].rotation_euler = (0.08, 0, -0.15)
-    pb['neck'].rotation_euler = (-0.05, 0, 0)
+    pb['head'].rotation_euler = (0.1, 0, -0.22)
+    pb['neck'].rotation_euler = (-0.08, 0, -0.06)
+    pb['arm.R'].rotation_euler = (0.35, 0, 0)
+    pb['fore.R'].rotation_euler = (-0.9, 0, 0)
+    pb['hand.R'].rotation_euler = (0.5, 0, 0)
+    for s, sx in SIDE.items():
+        pb['tail1.' + s].rotation_euler = (0, 0, sx * 0.1)
 
 
 def build():
     root = kit.empty('Glimmvix')
-    B = bones()
+    B = quad.bones(SPEC, extra_bones())
     arm = kit.make_armature(P_ + 'rig', B, parent=root)
     E = elements()
-    body = sv.build_body(P_ + 'body', E, arm, body_paint, seg(B), radii(), sv.body_material(P_ + 'fur', sheen=0.6))
+    body = sv.build_body(P_ + 'body', E, arm, body_paint, quad.seg(B), quad.radii(SPEC), sv.body_material(P_ + 'fur', sheen=0.6))
     eyes(arm, E)
     for s, sx in SIDE.items():
-        tip = V(TAIL[s][-1]) + V((sx * 0.02, -0.02, 0.14))
+        tip = V(TAIL[s][-1][:3]) + V((0, -0.02, 0.12))
         sv.star(arm, P_, tip, 0.2, 'star.' + s, 'tail2.' + s, face=(sx * 0.3, -1, 0.1), depth=0.075, spin=-sx * 0.25)
         sv.star_light(P_, tip + V((0, -0.2, 0)), 4.0, arm, 'starlight.' + s)
-    # small star on the forehead, laid onto the fur
-    fh = sv.probe_hit(E, [HEAD + V((0, -1.2, 0.55))], [V((0, 1.0, -0.42))])[0]
-    sv.star(arm, P_, fh + V((0, -0.005, 0)), 0.075, 'brow_star', 'head', face=(0, -1, 0.55), depth=0.02)
+    fh = sv.probe_hit(E, [HEAD + V((0, -1.2, 0.6))], [V((0, 1.0, -0.45))])[0]
+    sv.star(arm, P_, fh, 0.075, 'brow_star', 'head', face=(0, -1, 0.55), depth=0.02)
     for o in list(bpy.context.scene.objects):
         if o.type == 'MESH' and o.parent is None:
             o.parent = arm

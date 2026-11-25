@@ -12,8 +12,9 @@ from mathutils import Matrix, Vector as V
 
 import kit
 from kit import srgb as C
+import quad
 import sv
-from sv import El, ell, frame, tube
+from sv import El, ell, frame
 
 KEY = 'twinkit'
 P_ = 'twk_'
@@ -29,28 +30,23 @@ STAR = C('#ffd447')
 
 HEAD = V((0, -0.32, 1.08))
 LOOK = {s: V((sx * 0.55, -1, 0.06)).normalized() for s, sx in SIDE.items()}
+TAIL = [(0, 0.4, 0.6, 0.07), (0, 0.6, 0.64, 0.13), (0, 0.78, 0.82, 0.2), (0, 0.86, 1.06, 0.215), (0, 0.84, 1.28, 0.16),
+        (0, 0.8, 1.4, 0.08)]
+
+# chibi proportions: a short round body, a big head, short legs that still bend at the joints
+SPEC = dict(
+    spine=[(-0.24, 0.62, 0.2, 0.22), (-0.06, 0.6, 0.23, 0.24), (0.14, 0.57, 0.2, 0.21), (0.32, 0.58, 0.21, 0.22)],
+    neck=[(-0.2, 0.72, 0.18), (-0.27, 0.84, 0.17), (-0.3, 0.92, 0.17)],
+    head=(tuple(HEAD), (0.47, 0.41, 0.41)),
+    front=[(0.14, -0.18, 0.56, 0.095), (0.15, -0.13, 0.35, 0.072), (0.15, -0.2, 0.13, 0.062), (0.15, -0.21, 0.065, 0.06)],
+    back=[(0.15, 0.3, 0.56, 0.115), (0.16, 0.2, 0.36, 0.082), (0.16, 0.36, 0.17, 0.064), (0.16, 0.32, 0.065, 0.06)],
+    paw=(0.088, 0.115, 0.062),
+    tails=[TAIL],
+)
 
 
-def bones():
-    B = [('root', (0, 0, 0), (0, 0, 0.2), None, False),
-         ('hips', (0, 0.34, 0.5), (0, 0.0, 0.55), 'root', True),
-         ('chest', (0, 0.0, 0.55), (0, -0.22, 0.66), 'hips', True),
-         ('neck', (0, -0.22, 0.66), (0, -0.3, 0.86), 'chest', True),
-         ('head', (0, -0.3, 0.86), (0, -0.33, 1.36), 'neck', True),
-         ('tail0', (0, 0.46, 0.56), (0, 0.72, 0.66), 'hips', True),
-         ('tail1', (0, 0.72, 0.66), (0, 0.88, 0.95), 'tail0', True),
-         ('tail2', (0, 0.88, 0.95), (0, 0.86, 1.36), 'tail1', True)]
-    for s, sx in SIDE.items():
-        B += [('ear.' + s, (sx * 0.2, -0.28, 1.34), (sx * 0.42, -0.26, 1.78), 'head', True),
-              ('arm.' + s, (sx * 0.15, -0.18, 0.5), (sx * 0.16, -0.22, 0.12), 'chest', True),
-              ('hand.' + s, (sx * 0.16, -0.22, 0.12), (sx * 0.16, -0.36, 0.05), 'arm.' + s, True),
-              ('thigh.' + s, (sx * 0.17, 0.34, 0.45), (sx * 0.17, 0.4, 0.16), 'hips', True),
-              ('foot.' + s, (sx * 0.17, 0.4, 0.16), (sx * 0.17, 0.26, 0.05), 'thigh.' + s, True)]
-    return B
-
-
-def seg(B):
-    return {n: (V(h), V(t)) for n, h, t, p, d in B if d}
+def extra_bones():
+    return [('ear.' + s, (sx * 0.2, -0.28, 1.34), (sx * 0.42, -0.26, 1.78), 'head', True) for s, sx in SIDE.items()]
 
 
 # ------------------------------------------------------------------ paint functions for special shapes
@@ -85,14 +81,16 @@ def muzzle_paint(q, P, bc, bg):
 
 def leg_paint(q, P, bc, bg):
     """Fur color above, navy socks below."""
-    sock = sv.smoothstep(0.2, 0.16, P[:, 2])
-    col = bc + (np.array(NAVY) - bc) * sock[:, None]
+    top = sv.smoothstep(0.42, 0.56, P[:, 2])[:, None]
+    col = np.array(GOLD) + (bc - np.array(GOLD)) * top
+    sock = sv.smoothstep(0.21, 0.16, P[:, 2])
+    col += (np.array(NAVY) - col) * sock[:, None]
     return col, np.zeros(len(q))
 
 
 def tail_paint(q, P, bc, bg):
     """Gold tail that fades to a cream puff at the end, just under the star."""
-    t = sv.smoothstep(1.0, 1.22, P[:, 2])
+    t = sv.smoothstep(0.34, 0.2, np.linalg.norm(P - np.array(TAIL[-1][:3]), axis=1))
     col = np.tile(np.array(GOLD), (len(q), 1))
     col += (np.array(CREAM) - col) * t[:, None]
     return col, np.zeros(len(q))
@@ -107,63 +105,31 @@ def body_paint(P):
     face = ss(-0.4, -0.52, P[:, 1]) * ss(1.07, 0.99, P[:, 2])
     side = ss(0.28, 0.36, np.abs(P[:, 0])) * ss(1.02, 0.92, P[:, 2]) * ss(0.85, 0.9, P[:, 2]) * ss(-0.1, -0.25, P[:, 1])
     # cream chest bib and belly
-    bib = ss(-0.12, -0.24, P[:, 1]) * ss(0.88, 0.8, P[:, 2]) * ss(0.24, 0.16, np.abs(P[:, 0]))
-    belly = ss(0.42, 0.34, P[:, 2]) * ss(0.2, 0.12, np.abs(P[:, 0])) * ss(0.55, 0.4, P[:, 1])
+    bib = ss(-0.2, -0.32, P[:, 1]) * ss(0.92, 0.82, P[:, 2]) * ss(0.24, 0.14, np.abs(P[:, 0]))
+    belly = quad.underside(P, SPEC, frac=0.4)
     m = np.clip(face + side + bib + belly, 0, 1)
     col += (np.array(CREAM) - col) * m[:, None]
     # a slightly deeper gold stripe down the back
-    back = ss(0.08, 0.0, np.abs(P[:, 0])) * ss(0.6, 0.72, P[:, 2]) * ss(-0.1, 0.1, P[:, 1]) * ss(1.2, 1.0, P[:, 2])
-    col += (np.array(GOLD_D) - col) * (back * 0.6)[:, None]
     return col, np.zeros(n)
 
 
 # ------------------------------------------------------------------ shapes
 def elements():
-    E = []
-    # torso: chest, belly and haunches
-    E.append(ell((0, -0.12, 0.6), (0.26, 0.24, 0.26)))
-    E.append(ell((0, 0.15, 0.55), (0.24, 0.34, 0.23), (0.1, 0, 0)))
-    E.append(ell((0, -0.24, 0.8), (0.19, 0.17, 0.19)))
-    # big round head with a short muzzle and a button nose
-    E.append(ell(tuple(HEAD), (0.47, 0.41, 0.41)))
+    E = quad.elements(SPEC, leg_paint, tail_paint=tail_paint)
+    # skull top, short muzzle and a button nose on the big round head
     E.append(ell((0, -0.3, 1.3), (0.3, 0.26, 0.17)))
     E.append(ell((0, -0.66, 0.96), (0.18, 0.17, 0.13), (-0.15, 0, 0), paint=muzzle_paint))
     E.append(ell((0, -0.825, 1.0), (0.055, 0.04, 0.04), paint='solid', color=NAVY, probe=False))
-    for s, sx in SIDE.items():
-        if sx < 0:
-            continue
-        # big ears
-        root = V((sx * 0.2, -0.28, 1.34))
-        d = V((sx * 0.5, 0.06, 1)).normalized()
-        E.append(El(root + d * 0.26, (0.18, 0.28, 0.065), frame(d, (sx * 0.1, -1, 0.15)), paint=ear_paint,
-                    weights={'ear.' + s: 1.0}))
-        E.append(El(root + d * 0.5, (0.08, 0.12, 0.045), frame(d, (sx * 0.1, -1, 0.15)), paint=ear_tip_paint,
-                    weights={'ear.' + s: 1.0}))
-        # cheek fluff sweeping out and down
-        for rt, dd, L in (((0.38, -0.36, 0.98), (0.75, 0.25, -0.55), 0.13), ((0.34, -0.3, 0.88), (0.5, 0.35, -0.8), 0.1)):
-            dv = V((sx * dd[0], dd[1], dd[2])).normalized()
-            E.append(El(V((sx * rt[0], rt[1], rt[2])) + dv * L * 0.45, (0.075, L, 0.05), frame(dv, (sx * 0.3, -1, 0.2)),
-                        paint='solid', color=CREAM))
-        # front legs with paws
-        E += tube([(sx * 0.15, -0.16, 0.5), (sx * 0.16, -0.2, 0.3), (sx * 0.16, -0.23, 0.13)], [0.09, 0.075, 0.07],
-                  paint=leg_paint)
-        E.append(ell((sx * 0.16, -0.29, 0.06), (0.09, 0.12, 0.065), paint=leg_paint, weights={'hand.' + s: 1.0}))
-        # haunch and back leg
-        E.append(ell((sx * 0.15, 0.3, 0.42), (0.15, 0.2, 0.19)))
-        E += tube([(sx * 0.17, 0.38, 0.34), (sx * 0.17, 0.41, 0.15)], [0.085, 0.07], paint=leg_paint)
-        E.append(ell((sx * 0.17, 0.32, 0.06), (0.09, 0.12, 0.065), paint=leg_paint, weights={'foot.' + s: 1.0}))
-    E = sv.mirror(E)
-    # fluffy tail curling up behind
-    E += tube([(0, 0.4, 0.55), (0, 0.66, 0.6), (0, 0.84, 0.82), (0, 0.9, 1.08), (0, 0.85, 1.3)],
-              [0.08, 0.15, 0.22, 0.23, 0.15], flat=0.85, normal=(1, 0, 0), paint=tail_paint)
-    return E
-
-
-def radii():
-    r = dict(hips=0.32, chest=0.32, neck=0.25, head=0.5, tail0=0.18, tail1=0.24, tail2=0.24)
-    for s in 'LR':
-        r.update({'arm.' + s: 0.12, 'hand.' + s: 0.1, 'thigh.' + s: 0.16, 'foot.' + s: 0.1, 'ear.' + s: 0.2})
-    return r
+    side = []
+    root = V((0.2, -0.28, 1.34))
+    d = V((0.5, 0.06, 1)).normalized()
+    side.append(El(root + d * 0.26, (0.18, 0.28, 0.065), frame(d, (0.1, -1, 0.15)), paint=ear_paint, weights={'ear.R': 1.0}))
+    side.append(El(root + d * 0.5, (0.08, 0.12, 0.045), frame(d, (0.1, -1, 0.15)), paint=ear_tip_paint, weights={'ear.R': 1.0}))
+    # cheek fluff lying back along the jaw
+    for rt, dd, L in (((0.38, -0.36, 0.98), (0.6, 0.5, -0.55), 0.13), ((0.34, -0.3, 0.88), (0.45, 0.5, -0.75), 0.1)):
+        dv = V(dd).normalized()
+        side.append(El(V(rt) + dv * L * 0.45, (0.075, L, 0.05), frame(dv, (0.5, -0.8, 0.2)), paint='solid', color=CREAM))
+    return E + sv.mirror(side)
 
 
 # ------------------------------------------------------------------ set-in pieces
@@ -182,21 +148,20 @@ def eyes(arm, E):
 
 def display_pose(arm):
     pb = arm.pose.bones
-    pb['head'].rotation_euler = (0.05, 0, -0.12)
-    pb['tail1'].rotation_euler = (0, 0, 0.12)
-    pb['tail2'].rotation_euler = (-0.1, 0, 0.2)
-    for s, sx in SIDE.items():
-        pb['ear.' + s].rotation_euler = (0, 0, 0)
+    """Curious head tilt, tail swishing to one side."""
+    pb['head'].rotation_euler = (0.05, 0.2, -0.16)
+    pb['tail1'].rotation_euler = (0, 0, 0.15)
+    pb['tail2'].rotation_euler = (-0.1, 0, 0.22)
 
 
 def build():
     root = kit.empty('Twinkit')
-    B = bones()
+    B = quad.bones(SPEC, extra_bones())
     arm = kit.make_armature(P_ + 'rig', B, parent=root)
     E = elements()
-    body = sv.build_body(P_ + 'body', E, arm, body_paint, seg(B), radii(), sv.body_material(P_ + 'fur'))
+    body = sv.build_body(P_ + 'body', E, arm, body_paint, quad.seg(B), quad.radii(SPEC), sv.body_material(P_ + 'fur'))
     eyes(arm, E)
-    tip = V((0, 0.84, 1.52))
+    tip = V(TAIL[-1][:3]) + V((0, -0.02, 0.12))
     sv.star(arm, P_, tip, 0.25, 'star', 'tail2', face=(0, -1, 0.1), depth=0.09)
     sv.star_light(P_, tip + V((0, -0.25, 0)), 6.0, arm)
     for o in list(bpy.context.scene.objects):
